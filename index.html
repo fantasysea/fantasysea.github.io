@@ -352,7 +352,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-06-23 11:47:07" itemprop="dateModified" datetime="2019-06-23T11:47:07+08:00">2019-06-23</time>
+                <time title="修改时间：2019-06-23 16:50:22" itemprop="dateModified" datetime="2019-06-23T16:50:22+08:00">2019-06-23</time>
               
             
           </span>
@@ -425,6 +425,21 @@
 <p><strong>xargs命令</strong></p>
 </blockquote>
 <p>个人理解这是类似RXJAVA的转换器,对面前的一个命令进行进一步的处理,和exec命令类似,但是xargs能批量处理.</p>
+<blockquote>
+<p><strong>chmod</strong></p>
+</blockquote>
+<h2 id="修改文件的权限"><a href="#修改文件的权限" class="headerlink" title="修改文件的权限"></a>修改文件的权限</h2><p>u g o 分别是用户,用户组,其他用户</p>
+<p><code>chmod u=rxw,g=rx,o=r file3.txt</code></p>
+<h3 id="那么我们平时说的777权限又是怎么来的呢"><a href="#那么我们平时说的777权限又是怎么来的呢" class="headerlink" title="那么我们平时说的777权限又是怎么来的呢?"></a>那么我们平时说的777权限又是怎么来的呢?</h3><p>权限是通过9位的01区间授权的,111 111 111 就分别是 u g o 对应的权限.<br>3位一组,分别是对应读取,写入,执行权限.有权限就是1,没权限就是0.<br>111转10进制就是7,三组都是7,说明所有用户都有读写执行权限.</p>
+<blockquote>
+<p>第一位代表文件类型</p>
+</blockquote>
+<p>drwxrwxrwx：表示这是一个目录<br>-rwxrwxrwx：表示这是一个文件</p>
+<blockquote>
+<p><strong>chown</strong></p>
+</blockquote>
+<h2 id="修改文件的用户组"><a href="#修改文件的用户组" class="headerlink" title="修改文件的用户组"></a>修改文件的用户组</h2><p>前面steve是用户,root是用户组</p>
+<p><code>chown steve:root file3.txt</code></p>
 
           
         
