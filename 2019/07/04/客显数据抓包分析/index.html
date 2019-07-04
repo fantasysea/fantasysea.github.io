@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="客显数据抓包分析因为公司项目需要抓取客显的数据，客显数据大部分基于这个通用协议，个人理解，这个协议是基于ESC/POS协议的改良版。由于软件要抓取这些数据，分析出价格，所以需要先知道这些协议的格式形式。基于思迅天店的客显选择(多达48款)，我抓起了设置不同客显的时候的数据包，也抓了对应的波特率供大家参考（抓取数据真的很抓狂，搞了一个晚上）。  QA/QB 是显示第一行和第二行用的大部分加商品的时候">
+<meta name="keywords" content="客显,收银">
+<meta property="og:type" content="article">
+<meta property="og:title" content="客显数据抓包分析">
+<meta property="og:url" content="http://yoursite.com/2019/07/04/客显数据抓包分析/index.html">
+<meta property="og:site_name" content="Steve&#39;s Blog">
+<meta property="og:description" content="客显数据抓包分析因为公司项目需要抓取客显的数据，客显数据大部分基于这个通用协议，个人理解，这个协议是基于ESC/POS协议的改良版。由于软件要抓取这些数据，分析出价格，所以需要先知道这些协议的格式形式。基于思迅天店的客显选择(多达48款)，我抓起了设置不同客显的时候的数据包，也抓了对应的波特率供大家参考（抓取数据真的很抓狂，搞了一个晚上）。  QA/QB 是显示第一行和第二行用的大部分加商品的时候">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-07-04T01:24:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="客显数据抓包分析">
+<meta name="twitter:description" content="客显数据抓包分析因为公司项目需要抓取客显的数据，客显数据大部分基于这个通用协议，个人理解，这个协议是基于ESC/POS协议的改良版。由于软件要抓取这些数据，分析出价格，所以需要先知道这些协议的格式形式。基于思迅天店的客显选择(多达48款)，我抓起了设置不同客显的时候的数据包，也抓了对应的波特率供大家参考（抓取数据真的很抓狂，搞了一个晚上）。  QA/QB 是显示第一行和第二行用的大部分加商品的时候">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/07/04/客显数据抓包分析/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>客显数据抓包分析 | Steve's Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Steve's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">stay foolish,stay hungery</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/04/客显数据抓包分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Steve">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Steve's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">客显数据抓包分析
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-04 09:21:50 / 修改时间：09:24:13" itemprop="dateCreated datePublished" datetime="2019-07-04T09:21:50+08:00">2019-07-04</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="客显数据抓包分析"><a href="#客显数据抓包分析" class="headerlink" title="客显数据抓包分析"></a>客显数据抓包分析</h1><p>因为公司项目需要抓取客显的数据，客显数据大部分基于这个<a href="https://wenku.baidu.com/view/6c1b07aef78a6529657d5380.html" target="_blank" rel="noopener">通用协议</a>，个人理解，这个协议是基于ESC/POS协议的改良版。由于软件要抓取这些数据，分析出价格，所以需要先知道这些协议的格式形式。基于思迅天店的客显选择(多达48款)，我抓起了设置不同客显的时候的数据包，也抓了对应的波特率供大家参考（抓取数据真的很抓狂，搞了一个晚上）。</p>
+<blockquote>
+<p>QA/QB 是显示第一行和第二行用的<br>大部分加商品的时候发的指令是QA:12.33或者 QA合计:12.33，但是英文客显很多是QBTOT：12.33，但是也有直接S4 12.33 这样的</p>
+</blockquote>
+<p>有一些客显有2行，那么第一行他们会显示单价，第二行显示总价，类似 <code>QASUB:            0.15QBTOT:          497.55</code></p>
+<p><strong>客显使用的是<a href="https://cdn.barcodediscount.com/resources/CD5220_Manual.pdf" target="_blank" rel="noopener">CD-5220-ii</a>或ESC/POS指令集，这些指令集使用了控制符当协议，打印出来的话变成乱码，所以我再第二行填写了对应的ACSII码参考</strong></p>
+<h1 id="中文客显"><a href="#中文客显" class="headerlink" title="中文客显"></a>中文客显</h1><h2 id="寺冈中文客显（9600）"><a href="#寺冈中文客显（9600）" class="headerlink" title="寺冈中文客显（9600）"></a>寺冈中文客显（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">ESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="隆宝LANPOS-IC-851-11位数字五组汉字（9600）"><a href="#隆宝LANPOS-IC-851-11位数字五组汉字（9600）" class="headerlink" title="隆宝LANPOS IC-851 11位数字五组汉字（9600）"></a>隆宝LANPOS IC-851 11位数字五组汉字（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">ESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="隆宝LANPOS-IC-85B-双行英文型（9600）"><a href="#隆宝LANPOS-IC-85B-双行英文型（9600）" class="headerlink" title="隆宝LANPOS IC-85B 双行英文型（9600）"></a>隆宝LANPOS IC-85B 双行英文型（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">FFESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="隆宝LANPOS-IC-851-A单行11位数字（9600）"><a href="#隆宝LANPOS-IC-851-A单行11位数字（9600）" class="headerlink" title="隆宝LANPOS IC-851 A单行11位数字（9600）"></a>隆宝LANPOS IC-851 A单行11位数字（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">FFESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="桑达PD8000A（2400）"><a href="#桑达PD8000A（2400）" class="headerlink" title="桑达PD8000A（2400）"></a>桑达PD8000A（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA小计:             0.01QB合计:           150.18</span><br><span class="line">FFESCQA小计:         0.01ESCQA合计:           150.18</span><br></pre></td></tr></table></figure>
+
+<h2 id="桑达PD-8000A（9600）"><a href="#桑达PD-8000A（9600）" class="headerlink" title="桑达PD-8000A（9600）"></a>桑达PD-8000A（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">ESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="海信HK-VC108（9600）"><a href="#海信HK-VC108（9600）" class="headerlink" title="海信HK_VC108（9600）"></a>海信HK_VC108（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="海信VC210a（2400）"><a href="#海信VC210a（2400）" class="headerlink" title="海信VC210a（2400）"></a>海信VC210a（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="吉成VFD8C（2400）"><a href="#吉成VFD8C（2400）" class="headerlink" title="吉成VFD8C（2400）"></a>吉成VFD8C（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="商基单行11位客显（9600）"><a href="#商基单行11位客显（9600）" class="headerlink" title="商基单行11位客显（9600）"></a>商基单行11位客显（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="托利多ISMART-P-EVO-客显（2400）"><a href="#托利多ISMART-P-EVO-客显（2400）" class="headerlink" title="托利多ISMART-P/-EVO 客显（2400）"></a>托利多ISMART-P/-EVO 客显（2400）</h2><p>很贵1-3万<br>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1C��[2;1H合计:529.54</span><br><span class="line">EOTSOHFF1CETBUS  SOFFESC[2;1H合计:529.54</span><br></pre></td></tr></table></figure>
+
+<h2 id="托利多ISMART-S-5-7”-客显（2400）"><a href="#托利多ISMART-S-5-7”-客显（2400）" class="headerlink" title="托利多ISMART-S 5.7” 客显（2400）"></a>托利多ISMART-S 5.7” 客显（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1C��[2;1H合计:529.54</span><br><span class="line">EOTSOHFF1CETBUS  SOFFESC[2;1H合计:529.54</span><br></pre></td></tr></table></figure>
+
+<h2 id="易捷通GP1135A01B客显（9600）"><a href="#易捷通GP1135A01B客显（9600）" class="headerlink" title="易捷通GP1135A01B客显（9600）"></a>易捷通GP1135A01B客显（9600）</h2><p>很贵，暂时没看到匹配的波特率</p>
+<p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA小计:             0.01QB合计:           150.18</span><br><span class="line">FFESCQA小计:         0.01ESCQA合计:           150.18</span><br></pre></td></tr></table></figure>
+
+<h1 id="数字客显"><a href="#数字客显" class="headerlink" title="数字客显"></a>数字客显</h1><h2 id="川田科技CITAQ-PD-VFD810（2400）"><a href="#川田科技CITAQ-PD-VFD810（2400）" class="headerlink" title="川田科技CITAQ PD-VFD810（2400）"></a>川田科技CITAQ PD-VFD810（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA303.42</span><br><span class="line">FFESCQA303.42</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技DIY-POS-PD-VFD8C（2400）"><a href="#川田科技DIY-POS-PD-VFD8C（2400）" class="headerlink" title="川田科技DIY-POS PD-VFD8C（2400）"></a>川田科技DIY-POS PD-VFD8C（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s0s2QA317.45</span><br><span class="line">ESCs0ESCs2FFESCQA317.45</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技PD-VFD8CV（2400）"><a href="#川田科技PD-VFD8CV（2400）" class="headerlink" title="川田科技PD-VFD8CV（2400）"></a>川田科技PD-VFD8CV（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s0s2QA317.45</span><br><span class="line">ESCs0ESCs2FFESCQA317.45</span><br></pre></td></tr></table></figure>
+
+<h2 id="吉成314LED（2400）"><a href="#吉成314LED（2400）" class="headerlink" title="吉成314LED（2400）"></a>吉成314LED（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="寺冈DIGI-5800RM（9600）"><a href="#寺冈DIGI-5800RM（9600）" class="headerlink" title="寺冈DIGI-5800RM（9600）"></a>寺冈DIGI-5800RM（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QA5.29QB340.65</span><br><span class="line">   FFESCQA5.29ESCQB340.65</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利Posiflex-100（2400）"><a href="#宝获利Posiflex-100（2400）" class="headerlink" title="宝获利Posiflex-100（2400）"></a>宝获利Posiflex-100（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="甘雨GY-1008L-8位数字四组汉字（2400）"><a href="#甘雨GY-1008L-8位数字四组汉字（2400）" class="headerlink" title="甘雨GY-1008L 8位数字四组汉字（2400）"></a>甘雨GY-1008L 8位数字四组汉字（2400）</h2><p><strong>Q289.37</strong> 这个没有QA只有Q</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s2s3Q289.37</span><br><span class="line">ESCs2ESCs3FFESC Q289.37</span><br></pre></td></tr></table></figure>
+
+<h2 id="甘雨GY-1011-单行11位（9600）"><a href="#甘雨GY-1011-单行11位（9600）" class="headerlink" title="甘雨GY-1011 单行11位（9600）"></a>甘雨GY-1011 单行11位（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QA69378.83</span><br><span class="line">   QA69378.83</span><br></pre></td></tr></table></figure>
+
+<h2 id="海信HK-VC110（9600）"><a href="#海信HK-VC110（9600）" class="headerlink" title="海信HK_VC110（9600）"></a>海信HK_VC110（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s��sQA69378.80</span><br><span class="line">ESCs  ESCsSTXFFESC QA69378.80</span><br></pre></td></tr></table></figure>
+
+<h2 id="拍档CD-7110（9600）"><a href="#拍档CD-7110（9600）" class="headerlink" title="拍档CD-7110（9600）"></a>拍档CD-7110（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QC QC&quot;QA350.20</span><br><span class="line">ESCQC ESCQC&quot;FFESCQA350.20</span><br></pre></td></tr></table></figure>
+
+<h2 id="拍档PD-1110（9600）"><a href="#拍档PD-1110（9600）" class="headerlink" title="拍档PD-1110（9600）"></a>拍档PD-1110（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QC QC&quot;QA350.20</span><br><span class="line">ESCQC ESCQC&quot;FFESCQA350.20</span><br></pre></td></tr></table></figure>
+
+<h2 id="拍档单行数字型（9600）"><a href="#拍档单行数字型（9600）" class="headerlink" title="拍档单行数字型（9600）"></a>拍档单行数字型（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QA352.26</span><br><span class="line">   FFESCQA352.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="易捷通LED8（2400）"><a href="#易捷通LED8（2400）" class="headerlink" title="易捷通LED8（2400）"></a>易捷通LED8（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s00215.26</span><br><span class="line">ESC s0 NAK SOH 0 SOH FF NAK STX 215.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="商通电子-POS70（2400）"><a href="#商通电子-POS70（2400）" class="headerlink" title="商通电子 POS70（2400）"></a>商通电子 POS70（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s00215.26</span><br><span class="line">ESC s0 NAK SOH 0 SOH FF NAK STX 215.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="中崎ZQ-1088-10位数显（2400）"><a href="#中崎ZQ-1088-10位数显（2400）" class="headerlink" title="中崎ZQ-1088 10位数显（2400）"></a>中崎ZQ-1088 10位数显（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s00215.26</span><br><span class="line">ESC s0 NAK SOH 0 SOH FF NAK STX 215.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="天宝TBOX-TBOX2（9600）"><a href="#天宝TBOX-TBOX2（9600）" class="headerlink" title="天宝TBOX-TBOX2（9600）"></a>天宝TBOX-TBOX2（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s0s2QA350.16</span><br><span class="line">ESCs0ESCs2FFESCQA350.16</span><br></pre></td></tr></table></figure>
+
+<h1 id="英文客显"><a href="#英文客显" class="headerlink" title="英文客显"></a>英文客显</h1><h2 id="川田科技DIY-POS-PD-LED8N（2400）"><a href="#川田科技DIY-POS-PD-LED8N（2400）" class="headerlink" title="川田科技DIY-POS PD-LED8N（2400）"></a>川田科技DIY-POS PD-LED8N（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QATOT:479.55</span><br><span class="line">SOFFESCQATOT:479.55SOFF</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技DIY-POS-PD-LED12N（2400）"><a href="#川田科技DIY-POS-PD-LED12N（2400）" class="headerlink" title="川田科技DIY-POS PD-LED12N（2400）"></a>川田科技DIY-POS PD-LED12N（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QATOT:479.55</span><br><span class="line">SOFFESCQATOT:479.55SOFF</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技DIY-POS-PD-VFD220（9600）"><a href="#川田科技DIY-POS-PD-VFD220（9600）" class="headerlink" title="川田科技DIY-POS PD-VFD220（9600）"></a>川田科技DIY-POS PD-VFD220（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QASUB:            0.15QBTOT:          497.55</span><br><span class="line">SOFFESCQASUB:            0.15SOFFESCQBTOT:          497.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="惠普HP-PD220VFD-NQ-双行20位英文点阵VFD真空管（9600）"><a href="#惠普HP-PD220VFD-NQ-双行20位英文点阵VFD真空管（9600）" class="headerlink" title="惠普HP-PD220VFD-NQ 双行20位英文点阵VFD真空管（9600）"></a>惠普HP-PD220VFD-NQ 双行20位英文点阵VFD真空管（9600）</h2><p>这个客显是<strong>QBTOT:</strong>+价格</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@LASUB:            0.01QBTOT:          367.99</span><br><span class="line">ESC@ESCLASUB:            0.01ESCQBTOT:          367.99</span><br></pre></td></tr></table></figure>
+
+<h2 id="惠普HP-PD220VFD-NQT70PS-AB2（9600）"><a href="#惠普HP-PD220VFD-NQT70PS-AB2（9600）" class="headerlink" title="惠普HP-PD220VFD-NQT70PS#AB2（9600）"></a>惠普HP-PD220VFD-NQT70PS#AB2（9600）</h2><p>这个客显是<strong>QBTOT:</strong>+价格</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LASUB:            0.01QBTOT:          371.00</span><br><span class="line">FFESCLASUB:            0.01ESCQBTOT:          371.00</span><br></pre></td></tr></table></figure>
+
+<h2 id="IBM-POS300-4614-P80-双行20字客显（9600）"><a href="#IBM-POS300-4614-P80-双行20字客显（9600）" class="headerlink" title="IBM POS300/4614 P80 双行20字客显（9600）"></a>IBM POS300/4614 P80 双行20字客显（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LASUB:            0.01QBTOT:          371.00</span><br><span class="line">FFESCLASUB:            0.01ESCQBTOT:          371.00</span><br></pre></td></tr></table></figure>
+
+<h2 id="IBM-POS300-4614-P80-双行20字客显（9600）-1"><a href="#IBM-POS300-4614-P80-双行20字客显（9600）-1" class="headerlink" title="IBM POS300/4614 P80 双行20字客显（9600）"></a>IBM POS300/4614 P80 双行20字客显（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LATOT:          378.57</span><br><span class="line">FFESCLATOT:          378.57</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-PD300-可显示2行且每行可达20个字（9600）"><a href="#宝获利-PD300-可显示2行且每行可达20个字（9600）" class="headerlink" title="宝获利 PD300 可显示2行且每行可达20个字（9600）"></a>宝获利 PD300 可显示2行且每行可达20个字（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QASUB:            0.01QBTOT:          371.00</span><br><span class="line">FFESCQASUB:            0.01ESCQBTOT:          371.00</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-POSIFLEX-PD-2101-2x20字符（9600）"><a href="#宝获利-POSIFLEX-PD-2101-2x20字符（9600）" class="headerlink" title="宝获利 POSIFLEX PD-2101 2x20字符（9600）"></a>宝获利 POSIFLEX PD-2101 2x20字符（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SUB:            3.00</span><br><span class="line">   TOT:          517.45</span><br><span class="line">SOFFSUB:            3.00DC2</span><br><span class="line">   SOFFTOT:          517.45DC2</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-POSIFLEX-PD-2200-2x20字符（9600）"><a href="#宝获利-POSIFLEX-PD-2200-2x20字符（9600）" class="headerlink" title="宝获利 POSIFLEX PD-2200 2x20字符（9600）"></a>宝获利 POSIFLEX PD-2200 2x20字符（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">TOT:          504.94</span><br><span class="line">   </span><br><span class="line">SOSYNTOT:          504.94DLESYN</span><br><span class="line">   NAK</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-POSIFLEX-PD-7000-可显示2行且每行可达10个汉字（9600）"><a href="#宝获利-POSIFLEX-PD-7000-可显示2行且每行可达10个汉字（9600）" class="headerlink" title="宝获利 POSIFLEX PD-7000 可显示2行且每行可达10个汉字（9600）"></a>宝获利 POSIFLEX PD-7000 可显示2行且每行可达10个汉字（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SUB:            0.01</span><br><span class="line">TOT:          497.62</span><br><span class="line">NAKSUB:            0.01DLESYN</span><br><span class="line">NAKTOT:          497.62DLESYN</span><br></pre></td></tr></table></figure>
+
+<h2 id="唯拓VT-LED8CV-高亮度8位数码客显（2400）"><a href="#唯拓VT-LED8CV-高亮度8位数码客显（2400）" class="headerlink" title="唯拓VT-LED8CV 高亮度8位数码客显（2400）"></a>唯拓VT-LED8CV 高亮度8位数码客显（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QATOT:          437.33</span><br><span class="line">NAKESCQATOT:          437.33NAK</span><br></pre></td></tr></table></figure>
+
+<h2 id="莹浦通WD-202-英文20个字2行（2400）"><a href="#莹浦通WD-202-英文20个字2行（2400）" class="headerlink" title="莹浦通WD-202 英文20个字2行（2400）"></a>莹浦通WD-202 英文20个字2行（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QASUB:            1.50QBTOT:          438.86</span><br><span class="line">NAKESCQASUB:            1.50NAKESCQBTOT:          438.86</span><br></pre></td></tr></table></figure>
+
+<h2 id="德利多富WINCOR-NIXDORF-双行英文型（9600）"><a href="#德利多富WINCOR-NIXDORF-双行英文型（9600）" class="headerlink" title="德利多富WINCOR NIXDORF 双行英文型（9600）"></a>德利多富WINCOR NIXDORF 双行英文型（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[2J[1;1HSUB:            9.50[1I[2;1HTOT:          414.73</span><br><span class="line">ESC[2JESC[1;1HSUB:            9.50ESC[1IESC[2;1HTOT:          414.73</span><br></pre></td></tr></table></figure>
+
+<h2 id="中崎ZQ-8DL-8位VFD数码字符（2400）"><a href="#中崎ZQ-8DL-8位VFD数码字符（2400）" class="headerlink" title="中崎ZQ-8DL 8位VFD数码字符（2400）"></a>中崎ZQ-8DL 8位VFD数码字符（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QATOT:          446.39[1I</span><br><span class="line">   FFESCQATOT:          446.39ESC[1I</span><br></pre></td></tr></table></figure>
+
+<h2 id="中崎ZQ-8DLII-8位VFD数码字符（2400）"><a href="#中崎ZQ-8DLII-8位VFD数码字符（2400）" class="headerlink" title="中崎ZQ-8DLII 8位VFD数码字符（2400）"></a>中崎ZQ-8DLII 8位VFD数码字符（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@QATOT:          448.41[1I</span><br><span class="line">   ESC@ESCQATOT:          448.41ESC[1I</span><br></pre></td></tr></table></figure>
+
+<h2 id="桑达PD100A-双行中文（2400）"><a href="#桑达PD100A-双行中文（2400）" class="headerlink" title="桑达PD100A 双行中文（2400）"></a>桑达PD100A 双行中文（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@QATOT:          448.41[1I</span><br><span class="line">   ESC@ESCQATOT:          448.41ESC[1I</span><br></pre></td></tr></table></figure>
+
+<h2 id="亚仿PD-100C单行串口中文型（9600）"><a href="#亚仿PD-100C单行串口中文型（9600）" class="headerlink" title="亚仿PD-100C单行串口中文型（9600）"></a>亚仿PD-100C单行串口中文型（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1CTOT:  523.47</span><br><span class="line">EOTSOHFF1CETBEOTSTXTOT:  523.47EOTSOFF</span><br></pre></td></tr></table></figure>
+
+<h2 id="东芝LIUST-51-双行英文客显（9600）"><a href="#东芝LIUST-51-双行英文客显（9600）" class="headerlink" title="东芝LIUST-51 双行英文客显（9600）"></a>东芝LIUST-51 双行英文客显（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1C[1;1HSUB:            1.50[2;1HTOT:          529.49</span><br><span class="line">EOTSOHFF1CETBESC[1;1HSUB:            1.50SOFFESC[2;1HTOT:          529.49</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/客显/" rel="tag"># 客显</a>
+          
+            <a href="/tags/收银/" rel="tag"># 收银</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/25/Android USB节点获取跟踪/" rel="next" title="Android USB节点获取跟踪">
+                <i class="fa fa-chevron-left"></i> Android USB节点获取跟踪
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/04/Android串口通讯/" rel="prev" title="Android串口通讯">
+                Android串口通讯 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Steve</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">分类</span>
+                  
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#客显数据抓包分析"><span class="nav-number">1.</span> <span class="nav-text">客显数据抓包分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#中文客显"><span class="nav-number">2.</span> <span class="nav-text">中文客显</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#寺冈中文客显（9600）"><span class="nav-number">2.1.</span> <span class="nav-text">寺冈中文客显（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#隆宝LANPOS-IC-851-11位数字五组汉字（9600）"><span class="nav-number">2.2.</span> <span class="nav-text">隆宝LANPOS IC-851 11位数字五组汉字（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#隆宝LANPOS-IC-85B-双行英文型（9600）"><span class="nav-number">2.3.</span> <span class="nav-text">隆宝LANPOS IC-85B 双行英文型（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#隆宝LANPOS-IC-851-A单行11位数字（9600）"><span class="nav-number">2.4.</span> <span class="nav-text">隆宝LANPOS IC-851 A单行11位数字（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#桑达PD8000A（2400）"><span class="nav-number">2.5.</span> <span class="nav-text">桑达PD8000A（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#桑达PD-8000A（9600）"><span class="nav-number">2.6.</span> <span class="nav-text">桑达PD-8000A（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#海信HK-VC108（9600）"><span class="nav-number">2.7.</span> <span class="nav-text">海信HK_VC108（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#海信VC210a（2400）"><span class="nav-number">2.8.</span> <span class="nav-text">海信VC210a（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#吉成VFD8C（2400）"><span class="nav-number">2.9.</span> <span class="nav-text">吉成VFD8C（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#商基单行11位客显（9600）"><span class="nav-number">2.10.</span> <span class="nav-text">商基单行11位客显（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#托利多ISMART-P-EVO-客显（2400）"><span class="nav-number">2.11.</span> <span class="nav-text">托利多ISMART-P/-EVO 客显（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#托利多ISMART-S-5-7”-客显（2400）"><span class="nav-number">2.12.</span> <span class="nav-text">托利多ISMART-S 5.7” 客显（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#易捷通GP1135A01B客显（9600）"><span class="nav-number">2.13.</span> <span class="nav-text">易捷通GP1135A01B客显（9600）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数字客显"><span class="nav-number">3.</span> <span class="nav-text">数字客显</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#川田科技CITAQ-PD-VFD810（2400）"><span class="nav-number">3.1.</span> <span class="nav-text">川田科技CITAQ PD-VFD810（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#川田科技DIY-POS-PD-VFD8C（2400）"><span class="nav-number">3.2.</span> <span class="nav-text">川田科技DIY-POS PD-VFD8C（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#川田科技PD-VFD8CV（2400）"><span class="nav-number">3.3.</span> <span class="nav-text">川田科技PD-VFD8CV（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#吉成314LED（2400）"><span class="nav-number">3.4.</span> <span class="nav-text">吉成314LED（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#寺冈DIGI-5800RM（9600）"><span class="nav-number">3.5.</span> <span class="nav-text">寺冈DIGI-5800RM（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#宝获利Posiflex-100（2400）"><span class="nav-number">3.6.</span> <span class="nav-text">宝获利Posiflex-100（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#甘雨GY-1008L-8位数字四组汉字（2400）"><span class="nav-number">3.7.</span> <span class="nav-text">甘雨GY-1008L 8位数字四组汉字（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#甘雨GY-1011-单行11位（9600）"><span class="nav-number">3.8.</span> <span class="nav-text">甘雨GY-1011 单行11位（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#海信HK-VC110（9600）"><span class="nav-number">3.9.</span> <span class="nav-text">海信HK_VC110（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拍档CD-7110（9600）"><span class="nav-number">3.10.</span> <span class="nav-text">拍档CD-7110（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拍档PD-1110（9600）"><span class="nav-number">3.11.</span> <span class="nav-text">拍档PD-1110（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拍档单行数字型（9600）"><span class="nav-number">3.12.</span> <span class="nav-text">拍档单行数字型（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#易捷通LED8（2400）"><span class="nav-number">3.13.</span> <span class="nav-text">易捷通LED8（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#商通电子-POS70（2400）"><span class="nav-number">3.14.</span> <span class="nav-text">商通电子 POS70（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中崎ZQ-1088-10位数显（2400）"><span class="nav-number">3.15.</span> <span class="nav-text">中崎ZQ-1088 10位数显（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#天宝TBOX-TBOX2（9600）"><span class="nav-number">3.16.</span> <span class="nav-text">天宝TBOX-TBOX2（9600）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#英文客显"><span class="nav-number">4.</span> <span class="nav-text">英文客显</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#川田科技DIY-POS-PD-LED8N（2400）"><span class="nav-number">4.1.</span> <span class="nav-text">川田科技DIY-POS PD-LED8N（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#川田科技DIY-POS-PD-LED12N（2400）"><span class="nav-number">4.2.</span> <span class="nav-text">川田科技DIY-POS PD-LED12N（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#川田科技DIY-POS-PD-VFD220（9600）"><span class="nav-number">4.3.</span> <span class="nav-text">川田科技DIY-POS PD-VFD220（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#惠普HP-PD220VFD-NQ-双行20位英文点阵VFD真空管（9600）"><span class="nav-number">4.4.</span> <span class="nav-text">惠普HP-PD220VFD-NQ 双行20位英文点阵VFD真空管（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#惠普HP-PD220VFD-NQT70PS-AB2（9600）"><span class="nav-number">4.5.</span> <span class="nav-text">惠普HP-PD220VFD-NQT70PS#AB2（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IBM-POS300-4614-P80-双行20字客显（9600）"><span class="nav-number">4.6.</span> <span class="nav-text">IBM POS300/4614 P80 双行20字客显（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IBM-POS300-4614-P80-双行20字客显（9600）-1"><span class="nav-number">4.7.</span> <span class="nav-text">IBM POS300/4614 P80 双行20字客显（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#宝获利-PD300-可显示2行且每行可达20个字（9600）"><span class="nav-number">4.8.</span> <span class="nav-text">宝获利 PD300 可显示2行且每行可达20个字（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#宝获利-POSIFLEX-PD-2101-2x20字符（9600）"><span class="nav-number">4.9.</span> <span class="nav-text">宝获利 POSIFLEX PD-2101 2x20字符（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#宝获利-POSIFLEX-PD-2200-2x20字符（9600）"><span class="nav-number">4.10.</span> <span class="nav-text">宝获利 POSIFLEX PD-2200 2x20字符（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#宝获利-POSIFLEX-PD-7000-可显示2行且每行可达10个汉字（9600）"><span class="nav-number">4.11.</span> <span class="nav-text">宝获利 POSIFLEX PD-7000 可显示2行且每行可达10个汉字（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#唯拓VT-LED8CV-高亮度8位数码客显（2400）"><span class="nav-number">4.12.</span> <span class="nav-text">唯拓VT-LED8CV 高亮度8位数码客显（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#莹浦通WD-202-英文20个字2行（2400）"><span class="nav-number">4.13.</span> <span class="nav-text">莹浦通WD-202 英文20个字2行（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#德利多富WINCOR-NIXDORF-双行英文型（9600）"><span class="nav-number">4.14.</span> <span class="nav-text">德利多富WINCOR NIXDORF 双行英文型（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中崎ZQ-8DL-8位VFD数码字符（2400）"><span class="nav-number">4.15.</span> <span class="nav-text">中崎ZQ-8DL 8位VFD数码字符（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中崎ZQ-8DLII-8位VFD数码字符（2400）"><span class="nav-number">4.16.</span> <span class="nav-text">中崎ZQ-8DLII 8位VFD数码字符（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#桑达PD100A-双行中文（2400）"><span class="nav-number">4.17.</span> <span class="nav-text">桑达PD100A 双行中文（2400）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#亚仿PD-100C单行串口中文型（9600）"><span class="nav-number">4.18.</span> <span class="nav-text">亚仿PD-100C单行串口中文型（9600）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#东芝LIUST-51-双行英文客显（9600）"><span class="nav-number">4.19.</span> <span class="nav-text">东芝LIUST-51 双行英文客显（9600）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Steve</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

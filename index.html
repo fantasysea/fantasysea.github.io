@@ -290,6 +290,477 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/04/Android串口通讯/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Steve">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Steve's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/07/04/Android串口通讯/" class="post-title-link" itemprop="url">Android串口通讯</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-04 09:24:41 / 修改时间：09:25:56" itemprop="dateCreated datePublished" datetime="2019-07-04T09:24:41+08:00">2019-07-04</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="串口通讯"><a href="#串口通讯" class="headerlink" title="串口通讯"></a>串口通讯</h1><p>串口通讯我们需要直接操作节点文件，一般是tty*。tty是电传打印机的意思，是个人计算机出现之前就已经有了的物种。我们知道，计算机的数据都是01，那么很容易用高低电平模拟数据的传输。那么必须要有个协议来规范，如：RS-232，ttl等</p>
+<h2 id="UART"><a href="#UART" class="headerlink" title="UART"></a>UART</h2><p>UART个人理解就是一个ic芯片，控制什么时候收发数据，发数据的时候可以用RS232等协议发。</p>
+<h2 id="串行数据的格式"><a href="#串行数据的格式" class="headerlink" title="串行数据的格式"></a>串行数据的格式</h2><p>以下参数<a href="https://blog.csdn.net/qq_29350001/article/details/72730667" target="_blank" rel="noopener">来之</a><br>异步串行数据的一般格式是：起始位+数据位+停止位，(8-N-1格式) 其中起始位1 位，数据位可以是5、6、7、8位，停止位可以是1、1.5、2位。<br>起始位是一个值为0的位，所以对于正逻辑的TTL电平，起始位是一位时间的低电平；停止位是值为1的位，所以对于正逻辑的TTL电平，停止位是高电平。线路路空闲或者数据传输结束，对于正逻辑的TTL电平，线路总是1。对于负逻辑(如RS-232电平)则相反。</p>
+<p>例如，对于16进制数据55aaH，当采用8位数据位、1位停止位传输时，它在信号线上的波形如图1(TTL电平)和图2(RS-232电平)所示。 （先传第一个字节55，再传第二个字节aa，每个字节都是从低位向高位逐位传输）<br><img src="https://img-blog.csdn.net/20170525163526578" alt="TTL电平的串行数据帧格式(55aah)"></p>
+<p>图1 TTL电平的串行数据帧格式(55aah)</p>
+<p><img src="https://img-blog.csdn.net/20170525163541454" alt="RS-232电平的串行数据帧格式(55aah)"></p>
+<p>图2 RS-232电平的串行数据帧格式(55aah)</p>
+<h2 id="根据波形图计算波特率"><a href="#根据波形图计算波特率" class="headerlink" title="根据波形图计算波特率"></a>根据波形图计算波特率</h2><p>波特率就是一秒内的传输的码元，一个码元相当于一个高或者低电平。类似进行了一次0 1 操作就是2个码元。一个字节是8位，那么比特率是9600的时候，1秒能传输 9600/8 = 1200 byte=1.2 kb 波特率越高，那么传输速度越快。115200/8 = 14400/1024 = 14m每秒。那是相当大的一个数据了。不过由于串口中有起始位和结束位，所以实际有效数据并没那么多。</p>
+<p>如图3是图1在示波器中的显示示意，其中灰色线是示波器的时间分度线，此时假设是200us/格。 </p>
+<p><img src="https://img-blog.csdn.net/20170525163619407" alt="图3 波特率计算示意图"> </p>
+<p>图3 波特率计算示意图 </p>
+<p>可以看了，第一个字节的10位(1位起始位，8位数据位和1位停止位)共占约1.05ms，这样可计算出其波特率约为：<br>10bit / 1.05ms X 1000 ≈ 9600 bit/s<br>如果上图中的时间轴是100us/格，同样可以计算出波特率应是19200bit/s。<br>当通讯不正常，又能观察到波形时，就可根据上述方法，从波形图计算一下波特率是否正确。</p>
+<h2 id="串口通讯流程"><a href="#串口通讯流程" class="headerlink" title="串口通讯流程"></a>串口通讯流程</h2><p>串口的操作一般都通过四个步骤来完成：<br>1、打开串口<br>2、配置串口：对串口的波特率、数据位、停止位、校验码、等进行设置。<br>3、读写串口<br>4、关闭串口</p>
+<h2 id="Android中实现串口通讯"><a href="#Android中实现串口通讯" class="headerlink" title="Android中实现串口通讯"></a>Android中实现串口通讯</h2><p>普遍我们使用的是google实现的一个方案 <a href="https://code.google.com/archive/p/android-serialport-api/" target="_blank" rel="noopener">android-serialport-api</a> 我们项目中也一直这样使用。后来发现Android源码中有一个串口通讯的例子<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/base/tests/SerialChat/" target="_blank" rel="noopener">SerialChat</a>，使用的是<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/base/core/jni/android_hardware_SerialPort.cpp" target="_blank" rel="noopener">android_hardware_SerialPort.cpp</a>的open方法实现的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">#include &quot;utils/Log.h&quot;</span><br><span class="line">#include &quot;jni.h&quot;</span><br><span class="line">#include &quot;JNIHelp.h&quot;</span><br><span class="line">#include &quot;android_runtime/AndroidRuntime.h&quot;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;sys/stat.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;termios.h&gt;</span><br><span class="line">using namespace android;</span><br><span class="line">static jfieldID field_context;</span><br><span class="line">static void</span><br><span class="line">android_hardware_SerialPort_open(JNIEnv *env, jobject thiz, jobject fileDescriptor, jint speed)</span><br><span class="line">&#123;</span><br><span class="line">    switch (speed) &#123;</span><br><span class="line">        case 50:</span><br><span class="line">            speed = B50;</span><br><span class="line">            break;</span><br><span class="line">        case 75:</span><br><span class="line">            speed = B75;</span><br><span class="line">            break;</span><br><span class="line">        case 110:</span><br><span class="line">            speed = B110;</span><br><span class="line">            break;</span><br><span class="line">        case 134:</span><br><span class="line">            speed = B134;</span><br><span class="line">            break;</span><br><span class="line">        case 150:</span><br><span class="line">            speed = B150;</span><br><span class="line">            break;</span><br><span class="line">        case 200:</span><br><span class="line">            speed = B200;</span><br><span class="line">            break;</span><br><span class="line">        case 300:</span><br><span class="line">            speed = B300;</span><br><span class="line">            break;</span><br><span class="line">        case 600:</span><br><span class="line">            speed = B600;</span><br><span class="line">            break;</span><br><span class="line">        case 1200:</span><br><span class="line">            speed = B1200;</span><br><span class="line">            break;</span><br><span class="line">        case 1800:</span><br><span class="line">            speed = B1800;</span><br><span class="line">            break;</span><br><span class="line">        case 2400:</span><br><span class="line">            speed = B2400;</span><br><span class="line">            break;</span><br><span class="line">        case 4800:</span><br><span class="line">            speed = B4800;</span><br><span class="line">            break;</span><br><span class="line">        case 9600:</span><br><span class="line">            speed = B9600;</span><br><span class="line">            break;</span><br><span class="line">        case 19200:</span><br><span class="line">            speed = B19200;</span><br><span class="line">            break;</span><br><span class="line">        case 38400:</span><br><span class="line">            speed = B38400;</span><br><span class="line">            break;</span><br><span class="line">        case 57600:</span><br><span class="line">            speed = B57600;</span><br><span class="line">            break;</span><br><span class="line">        case 115200:</span><br><span class="line">            speed = B115200;</span><br><span class="line">            break;</span><br><span class="line">        case 230400:</span><br><span class="line">            speed = B230400;</span><br><span class="line">            break;</span><br><span class="line">        case 460800:</span><br><span class="line">            speed = B460800;</span><br><span class="line">            break;</span><br><span class="line">        case 500000:</span><br><span class="line">            speed = B500000;</span><br><span class="line">            break;</span><br><span class="line">        case 576000:</span><br><span class="line">            speed = B576000;</span><br><span class="line">            break;</span><br><span class="line">        case 921600:</span><br><span class="line">            speed = B921600;</span><br><span class="line">            break;</span><br><span class="line">        case 1000000:</span><br><span class="line">            speed = B1000000;</span><br><span class="line">            break;</span><br><span class="line">        case 1152000:</span><br><span class="line">            speed = B1152000;</span><br><span class="line">            break;</span><br><span class="line">        case 1500000:</span><br><span class="line">            speed = B1500000;</span><br><span class="line">            break;</span><br><span class="line">        case 2000000:</span><br><span class="line">            speed = B2000000;</span><br><span class="line">            break;</span><br><span class="line">        case 2500000:</span><br><span class="line">            speed = B2500000;</span><br><span class="line">            break;</span><br><span class="line">        case 3000000:</span><br><span class="line">            speed = B3000000;</span><br><span class="line">            break;</span><br><span class="line">        case 3500000:</span><br><span class="line">            speed = B3500000;</span><br><span class="line">            break;</span><br><span class="line">        case 4000000:</span><br><span class="line">            speed = B4000000;</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            jniThrowException(env, &quot;java/lang/IllegalArgumentException&quot;,</span><br><span class="line">                              &quot;Unsupported serial port speed&quot;);</span><br><span class="line">            return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);</span><br><span class="line">    // duplicate the file descriptor, since ParcelFileDescriptor will eventually close its copy</span><br><span class="line">    fd = dup(fd);</span><br><span class="line">    if (fd &lt; 0) &#123;</span><br><span class="line">        jniThrowException(env, &quot;java/io/IOException&quot;, &quot;Could not open serial port&quot;);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    env-&gt;SetIntField(thiz, field_context, fd);</span><br><span class="line">    struct termios tio;</span><br><span class="line">    if (tcgetattr(fd, &amp;tio))</span><br><span class="line">        memset(&amp;tio, 0, sizeof(tio));</span><br><span class="line">    tio.c_cflag =  speed | CS8 | CLOCAL | CREAD;</span><br><span class="line">    // Disable output processing, including messing with end-of-line characters.</span><br><span class="line">    tio.c_oflag &amp;= ~OPOST;//原始数据输出</span><br><span class="line">    tio.c_iflag = IGNPAR;//忽略桢错误和奇偶校验错</span><br><span class="line">    tio.c_lflag = 0; /* turn of CANON, ECHO*, etc *///关闭本地处理</span><br><span class="line">    /* no timeout but request at least one character per read */</span><br><span class="line">    tio.c_cc[VTIME] = 0;</span><br><span class="line">    tio.c_cc[VMIN] = 1;//最小读取到1个字节就返回</span><br><span class="line">    tcsetattr(fd, TCSANOW, &amp;tio);</span><br><span class="line">    tcflush(fd, TCIFLUSH);//如果发生数据溢出，接收数据，但是不再读取</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与<a href="https://code.google.com/archive/p/android-serialport-api/" target="_blank" rel="noopener">android-serialport-api</a> 对比，termios的设置更加丰富。那么我们必须要了解termios的各种设置是什么意思才能确认哪个方案更加适合自己。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct termios</span><br><span class="line">      &#123;</span><br><span class="line">      tcflag_t  c_iflag;  //输入选项</span><br><span class="line">      tcflag_t  c_oflag;  //输出选项</span><br><span class="line">      tcflag_t  c_cflag;  //控制选项</span><br><span class="line">      tcflag_t  c_lflag;  //行选项</span><br><span class="line">      cc_t      c_cc[NCCS]; //控制字符</span><br><span class="line">      &#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">    //修改控制模式，保证程序不会占用串口</span><br><span class="line">    options.c_cflag |= CLOCAL;</span><br><span class="line">    //修改控制模式，使得能够从串口中读取输入数据</span><br><span class="line">    options.c_cflag |= CREAD;</span><br><span class="line"></span><br><span class="line">`</span><br></pre></td></tr></table></figure>
+
+<p>关于termios的设置和参数非常多也复杂，我收集了几篇文章给大家参考.c_iflag，c_oflag，c_cflag等这些控制位的赋值一般都是 | &amp;的方式，<br>比如：<br>c_cflag |= CLOCAL;//忽略 modem 控制线<br>c_oflag &amp;= ~OPOST;//原始数据输出  ~就是非，取反的意思。</p>
+<p>控制字符<em>c_cc</em>中VTIME, VMIN 比较重要，VTIME就是超时时间，可以不设置，VMIN是最小读取数据量。他们组合起来会有各种玩法。摘录了一下：</p>
+<p>*
+控制符VTIME和VMIN之间有复杂的关系。VTIME定义要求等待的时间（百毫米，通常是unsigned char变量），而VMIN定义了要求等待的最小字节数（相比之下，read函数的第三个参数指定了要求读的最大字节数）。<br>如果VTIME=0，VMIN=要求等待读取的最小字节数，read必须在读取了VMIN个字节的数据或者收到一个信号才会返回。<br>如果VTIME=时间量，VMIN=0，不管能否读取到数据，read也要等待VTIME的时间量。<br>如果VTIME=时间量，VMIN=要求等待读取的最小字节数，那么将从read读取第一个字节的数据时开始计时，并会在读取到VMIN个字节或者VTIME时间后返回。<br>如果VTIME=0，VMIN=0，不管能否读取到数据，read都会立即返回。</p>
+<p>*</p>
+<ul>
+<li><a href="https://blog.csdn.net/qq_29350001/article/details/72730667" target="_blank" rel="noopener">UNIX再学习 – RS485 串口编程</a></li>
+<li><a href="http://www.man7.org/linux/man-pages/man3/termios.3.html" target="_blank" rel="noopener">Linux Programmer’s Manual  TERMIOS(3)</a></li>
+<li><a href="https://blog.csdn.net/freezgw1985/article/details/5789190" target="_blank" rel="noopener">linux 串口编程</a></li>
+<li><a href="https://www.cnblogs.com/xiaojianliu/p/8473113.html" target="_blank" rel="noopener">串口编程2：编程基础</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/04/客显数据抓包分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Steve">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Steve's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/07/04/客显数据抓包分析/" class="post-title-link" itemprop="url">客显数据抓包分析</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-04 09:21:50 / 修改时间：09:24:13" itemprop="dateCreated datePublished" datetime="2019-07-04T09:21:50+08:00">2019-07-04</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="客显数据抓包分析"><a href="#客显数据抓包分析" class="headerlink" title="客显数据抓包分析"></a>客显数据抓包分析</h1><p>因为公司项目需要抓取客显的数据，客显数据大部分基于这个<a href="https://wenku.baidu.com/view/6c1b07aef78a6529657d5380.html" target="_blank" rel="noopener">通用协议</a>，个人理解，这个协议是基于ESC/POS协议的改良版。由于软件要抓取这些数据，分析出价格，所以需要先知道这些协议的格式形式。基于思迅天店的客显选择(多达48款)，我抓起了设置不同客显的时候的数据包，也抓了对应的波特率供大家参考（抓取数据真的很抓狂，搞了一个晚上）。</p>
+<blockquote>
+<p>QA/QB 是显示第一行和第二行用的<br>大部分加商品的时候发的指令是QA:12.33或者 QA合计:12.33，但是英文客显很多是QBTOT：12.33，但是也有直接S4 12.33 这样的</p>
+</blockquote>
+<p>有一些客显有2行，那么第一行他们会显示单价，第二行显示总价，类似 <code>QASUB:            0.15QBTOT:          497.55</code></p>
+<p><strong>客显使用的是<a href="https://cdn.barcodediscount.com/resources/CD5220_Manual.pdf" target="_blank" rel="noopener">CD-5220-ii</a>或ESC/POS指令集，这些指令集使用了控制符当协议，打印出来的话变成乱码，所以我再第二行填写了对应的ACSII码参考</strong></p>
+<h1 id="中文客显"><a href="#中文客显" class="headerlink" title="中文客显"></a>中文客显</h1><h2 id="寺冈中文客显（9600）"><a href="#寺冈中文客显（9600）" class="headerlink" title="寺冈中文客显（9600）"></a>寺冈中文客显（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">ESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="隆宝LANPOS-IC-851-11位数字五组汉字（9600）"><a href="#隆宝LANPOS-IC-851-11位数字五组汉字（9600）" class="headerlink" title="隆宝LANPOS IC-851 11位数字五组汉字（9600）"></a>隆宝LANPOS IC-851 11位数字五组汉字（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">ESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="隆宝LANPOS-IC-85B-双行英文型（9600）"><a href="#隆宝LANPOS-IC-85B-双行英文型（9600）" class="headerlink" title="隆宝LANPOS IC-85B 双行英文型（9600）"></a>隆宝LANPOS IC-85B 双行英文型（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">FFESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="隆宝LANPOS-IC-851-A单行11位数字（9600）"><a href="#隆宝LANPOS-IC-851-A单行11位数字（9600）" class="headerlink" title="隆宝LANPOS IC-851 A单行11位数字（9600）"></a>隆宝LANPOS IC-851 A单行11位数字（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">FFESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="桑达PD8000A（2400）"><a href="#桑达PD8000A（2400）" class="headerlink" title="桑达PD8000A（2400）"></a>桑达PD8000A（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA小计:             0.01QB合计:           150.18</span><br><span class="line">FFESCQA小计:         0.01ESCQA合计:           150.18</span><br></pre></td></tr></table></figure>
+
+<h2 id="桑达PD-8000A（9600）"><a href="#桑达PD-8000A（9600）" class="headerlink" title="桑达PD-8000A（9600）"></a>桑达PD-8000A（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:        531607.11</span><br><span class="line">ESCQA合计:        531607.11</span><br></pre></td></tr></table></figure>
+
+<h2 id="海信HK-VC108（9600）"><a href="#海信HK-VC108（9600）" class="headerlink" title="海信HK_VC108（9600）"></a>海信HK_VC108（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="海信VC210a（2400）"><a href="#海信VC210a（2400）" class="headerlink" title="海信VC210a（2400）"></a>海信VC210a（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="吉成VFD8C（2400）"><a href="#吉成VFD8C（2400）" class="headerlink" title="吉成VFD8C（2400）"></a>吉成VFD8C（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="商基单行11位客显（9600）"><a href="#商基单行11位客显（9600）" class="headerlink" title="商基单行11位客显（9600）"></a>商基单行11位客显（9600）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="托利多ISMART-P-EVO-客显（2400）"><a href="#托利多ISMART-P-EVO-客显（2400）" class="headerlink" title="托利多ISMART-P/-EVO 客显（2400）"></a>托利多ISMART-P/-EVO 客显（2400）</h2><p>很贵1-3万<br>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1C��[2;1H合计:529.54</span><br><span class="line">EOTSOHFF1CETBUS  SOFFESC[2;1H合计:529.54</span><br></pre></td></tr></table></figure>
+
+<h2 id="托利多ISMART-S-5-7”-客显（2400）"><a href="#托利多ISMART-S-5-7”-客显（2400）" class="headerlink" title="托利多ISMART-S 5.7” 客显（2400）"></a>托利多ISMART-S 5.7” 客显（2400）</h2><p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1C��[2;1H合计:529.54</span><br><span class="line">EOTSOHFF1CETBUS  SOFFESC[2;1H合计:529.54</span><br></pre></td></tr></table></figure>
+
+<h2 id="易捷通GP1135A01B客显（9600）"><a href="#易捷通GP1135A01B客显（9600）" class="headerlink" title="易捷通GP1135A01B客显（9600）"></a>易捷通GP1135A01B客显（9600）</h2><p>很贵，暂时没看到匹配的波特率</p>
+<p>这是通过拿到的byte数据转 new String(date,”gbk”)获取到的数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA小计:             0.01QB合计:           150.18</span><br><span class="line">FFESCQA小计:         0.01ESCQA合计:           150.18</span><br></pre></td></tr></table></figure>
+
+<h1 id="数字客显"><a href="#数字客显" class="headerlink" title="数字客显"></a>数字客显</h1><h2 id="川田科技CITAQ-PD-VFD810（2400）"><a href="#川田科技CITAQ-PD-VFD810（2400）" class="headerlink" title="川田科技CITAQ PD-VFD810（2400）"></a>川田科技CITAQ PD-VFD810（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA303.42</span><br><span class="line">FFESCQA303.42</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技DIY-POS-PD-VFD8C（2400）"><a href="#川田科技DIY-POS-PD-VFD8C（2400）" class="headerlink" title="川田科技DIY-POS PD-VFD8C（2400）"></a>川田科技DIY-POS PD-VFD8C（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s0s2QA317.45</span><br><span class="line">ESCs0ESCs2FFESCQA317.45</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技PD-VFD8CV（2400）"><a href="#川田科技PD-VFD8CV（2400）" class="headerlink" title="川田科技PD-VFD8CV（2400）"></a>川田科技PD-VFD8CV（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s0s2QA317.45</span><br><span class="line">ESCs0ESCs2FFESCQA317.45</span><br></pre></td></tr></table></figure>
+
+<h2 id="吉成314LED（2400）"><a href="#吉成314LED（2400）" class="headerlink" title="吉成314LED（2400）"></a>吉成314LED（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="寺冈DIGI-5800RM（9600）"><a href="#寺冈DIGI-5800RM（9600）" class="headerlink" title="寺冈DIGI-5800RM（9600）"></a>寺冈DIGI-5800RM（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QA5.29QB340.65</span><br><span class="line">   FFESCQA5.29ESCQB340.65</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利Posiflex-100（2400）"><a href="#宝获利Posiflex-100（2400）" class="headerlink" title="宝获利Posiflex-100（2400）"></a>宝获利Posiflex-100（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QA合计:86.55</span><br><span class="line">FFESCQA合计:86.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="甘雨GY-1008L-8位数字四组汉字（2400）"><a href="#甘雨GY-1008L-8位数字四组汉字（2400）" class="headerlink" title="甘雨GY-1008L 8位数字四组汉字（2400）"></a>甘雨GY-1008L 8位数字四组汉字（2400）</h2><p><strong>Q289.37</strong> 这个没有QA只有Q</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s2s3Q289.37</span><br><span class="line">ESCs2ESCs3FFESC Q289.37</span><br></pre></td></tr></table></figure>
+
+<h2 id="甘雨GY-1011-单行11位（9600）"><a href="#甘雨GY-1011-单行11位（9600）" class="headerlink" title="甘雨GY-1011 单行11位（9600）"></a>甘雨GY-1011 单行11位（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QA69378.83</span><br><span class="line">   QA69378.83</span><br></pre></td></tr></table></figure>
+
+<h2 id="海信HK-VC110（9600）"><a href="#海信HK-VC110（9600）" class="headerlink" title="海信HK_VC110（9600）"></a>海信HK_VC110（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s��sQA69378.80</span><br><span class="line">ESCs  ESCsSTXFFESC QA69378.80</span><br></pre></td></tr></table></figure>
+
+<h2 id="拍档CD-7110（9600）"><a href="#拍档CD-7110（9600）" class="headerlink" title="拍档CD-7110（9600）"></a>拍档CD-7110（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QC QC&quot;QA350.20</span><br><span class="line">ESCQC ESCQC&quot;FFESCQA350.20</span><br></pre></td></tr></table></figure>
+
+<h2 id="拍档PD-1110（9600）"><a href="#拍档PD-1110（9600）" class="headerlink" title="拍档PD-1110（9600）"></a>拍档PD-1110（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QC QC&quot;QA350.20</span><br><span class="line">ESCQC ESCQC&quot;FFESCQA350.20</span><br></pre></td></tr></table></figure>
+
+<h2 id="拍档单行数字型（9600）"><a href="#拍档单行数字型（9600）" class="headerlink" title="拍档单行数字型（9600）"></a>拍档单行数字型（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QA352.26</span><br><span class="line">   FFESCQA352.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="易捷通LED8（2400）"><a href="#易捷通LED8（2400）" class="headerlink" title="易捷通LED8（2400）"></a>易捷通LED8（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s00215.26</span><br><span class="line">ESC s0 NAK SOH 0 SOH FF NAK STX 215.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="商通电子-POS70（2400）"><a href="#商通电子-POS70（2400）" class="headerlink" title="商通电子 POS70（2400）"></a>商通电子 POS70（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s00215.26</span><br><span class="line">ESC s0 NAK SOH 0 SOH FF NAK STX 215.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="中崎ZQ-1088-10位数显（2400）"><a href="#中崎ZQ-1088-10位数显（2400）" class="headerlink" title="中崎ZQ-1088 10位数显（2400）"></a>中崎ZQ-1088 10位数显（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s00215.26</span><br><span class="line">ESC s0 NAK SOH 0 SOH FF NAK STX 215.26</span><br></pre></td></tr></table></figure>
+
+<h2 id="天宝TBOX-TBOX2（9600）"><a href="#天宝TBOX-TBOX2（9600）" class="headerlink" title="天宝TBOX-TBOX2（9600）"></a>天宝TBOX-TBOX2（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s0s2QA350.16</span><br><span class="line">ESCs0ESCs2FFESCQA350.16</span><br></pre></td></tr></table></figure>
+
+<h1 id="英文客显"><a href="#英文客显" class="headerlink" title="英文客显"></a>英文客显</h1><h2 id="川田科技DIY-POS-PD-LED8N（2400）"><a href="#川田科技DIY-POS-PD-LED8N（2400）" class="headerlink" title="川田科技DIY-POS PD-LED8N（2400）"></a>川田科技DIY-POS PD-LED8N（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QATOT:479.55</span><br><span class="line">SOFFESCQATOT:479.55SOFF</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技DIY-POS-PD-LED12N（2400）"><a href="#川田科技DIY-POS-PD-LED12N（2400）" class="headerlink" title="川田科技DIY-POS PD-LED12N（2400）"></a>川田科技DIY-POS PD-LED12N（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QATOT:479.55</span><br><span class="line">SOFFESCQATOT:479.55SOFF</span><br></pre></td></tr></table></figure>
+
+<h2 id="川田科技DIY-POS-PD-VFD220（9600）"><a href="#川田科技DIY-POS-PD-VFD220（9600）" class="headerlink" title="川田科技DIY-POS PD-VFD220（9600）"></a>川田科技DIY-POS PD-VFD220（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QASUB:            0.15QBTOT:          497.55</span><br><span class="line">SOFFESCQASUB:            0.15SOFFESCQBTOT:          497.55</span><br></pre></td></tr></table></figure>
+
+<h2 id="惠普HP-PD220VFD-NQ-双行20位英文点阵VFD真空管（9600）"><a href="#惠普HP-PD220VFD-NQ-双行20位英文点阵VFD真空管（9600）" class="headerlink" title="惠普HP-PD220VFD-NQ 双行20位英文点阵VFD真空管（9600）"></a>惠普HP-PD220VFD-NQ 双行20位英文点阵VFD真空管（9600）</h2><p>这个客显是<strong>QBTOT:</strong>+价格</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@LASUB:            0.01QBTOT:          367.99</span><br><span class="line">ESC@ESCLASUB:            0.01ESCQBTOT:          367.99</span><br></pre></td></tr></table></figure>
+
+<h2 id="惠普HP-PD220VFD-NQT70PS-AB2（9600）"><a href="#惠普HP-PD220VFD-NQT70PS-AB2（9600）" class="headerlink" title="惠普HP-PD220VFD-NQT70PS#AB2（9600）"></a>惠普HP-PD220VFD-NQT70PS#AB2（9600）</h2><p>这个客显是<strong>QBTOT:</strong>+价格</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LASUB:            0.01QBTOT:          371.00</span><br><span class="line">FFESCLASUB:            0.01ESCQBTOT:          371.00</span><br></pre></td></tr></table></figure>
+
+<h2 id="IBM-POS300-4614-P80-双行20字客显（9600）"><a href="#IBM-POS300-4614-P80-双行20字客显（9600）" class="headerlink" title="IBM POS300/4614 P80 双行20字客显（9600）"></a>IBM POS300/4614 P80 双行20字客显（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LASUB:            0.01QBTOT:          371.00</span><br><span class="line">FFESCLASUB:            0.01ESCQBTOT:          371.00</span><br></pre></td></tr></table></figure>
+
+<h2 id="IBM-POS300-4614-P80-双行20字客显（9600）-1"><a href="#IBM-POS300-4614-P80-双行20字客显（9600）-1" class="headerlink" title="IBM POS300/4614 P80 双行20字客显（9600）"></a>IBM POS300/4614 P80 双行20字客显（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LATOT:          378.57</span><br><span class="line">FFESCLATOT:          378.57</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-PD300-可显示2行且每行可达20个字（9600）"><a href="#宝获利-PD300-可显示2行且每行可达20个字（9600）" class="headerlink" title="宝获利 PD300 可显示2行且每行可达20个字（9600）"></a>宝获利 PD300 可显示2行且每行可达20个字（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QASUB:            0.01QBTOT:          371.00</span><br><span class="line">FFESCQASUB:            0.01ESCQBTOT:          371.00</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-POSIFLEX-PD-2101-2x20字符（9600）"><a href="#宝获利-POSIFLEX-PD-2101-2x20字符（9600）" class="headerlink" title="宝获利 POSIFLEX PD-2101 2x20字符（9600）"></a>宝获利 POSIFLEX PD-2101 2x20字符（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SUB:            3.00</span><br><span class="line">   TOT:          517.45</span><br><span class="line">SOFFSUB:            3.00DC2</span><br><span class="line">   SOFFTOT:          517.45DC2</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-POSIFLEX-PD-2200-2x20字符（9600）"><a href="#宝获利-POSIFLEX-PD-2200-2x20字符（9600）" class="headerlink" title="宝获利 POSIFLEX PD-2200 2x20字符（9600）"></a>宝获利 POSIFLEX PD-2200 2x20字符（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">TOT:          504.94</span><br><span class="line">   </span><br><span class="line">SOSYNTOT:          504.94DLESYN</span><br><span class="line">   NAK</span><br></pre></td></tr></table></figure>
+
+<h2 id="宝获利-POSIFLEX-PD-7000-可显示2行且每行可达10个汉字（9600）"><a href="#宝获利-POSIFLEX-PD-7000-可显示2行且每行可达10个汉字（9600）" class="headerlink" title="宝获利 POSIFLEX PD-7000 可显示2行且每行可达10个汉字（9600）"></a>宝获利 POSIFLEX PD-7000 可显示2行且每行可达10个汉字（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SUB:            0.01</span><br><span class="line">TOT:          497.62</span><br><span class="line">NAKSUB:            0.01DLESYN</span><br><span class="line">NAKTOT:          497.62DLESYN</span><br></pre></td></tr></table></figure>
+
+<h2 id="唯拓VT-LED8CV-高亮度8位数码客显（2400）"><a href="#唯拓VT-LED8CV-高亮度8位数码客显（2400）" class="headerlink" title="唯拓VT-LED8CV 高亮度8位数码客显（2400）"></a>唯拓VT-LED8CV 高亮度8位数码客显（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QATOT:          437.33</span><br><span class="line">NAKESCQATOT:          437.33NAK</span><br></pre></td></tr></table></figure>
+
+<h2 id="莹浦通WD-202-英文20个字2行（2400）"><a href="#莹浦通WD-202-英文20个字2行（2400）" class="headerlink" title="莹浦通WD-202 英文20个字2行（2400）"></a>莹浦通WD-202 英文20个字2行（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QASUB:            1.50QBTOT:          438.86</span><br><span class="line">NAKESCQASUB:            1.50NAKESCQBTOT:          438.86</span><br></pre></td></tr></table></figure>
+
+<h2 id="德利多富WINCOR-NIXDORF-双行英文型（9600）"><a href="#德利多富WINCOR-NIXDORF-双行英文型（9600）" class="headerlink" title="德利多富WINCOR NIXDORF 双行英文型（9600）"></a>德利多富WINCOR NIXDORF 双行英文型（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[2J[1;1HSUB:            9.50[1I[2;1HTOT:          414.73</span><br><span class="line">ESC[2JESC[1;1HSUB:            9.50ESC[1IESC[2;1HTOT:          414.73</span><br></pre></td></tr></table></figure>
+
+<h2 id="中崎ZQ-8DL-8位VFD数码字符（2400）"><a href="#中崎ZQ-8DL-8位VFD数码字符（2400）" class="headerlink" title="中崎ZQ-8DL 8位VFD数码字符（2400）"></a>中崎ZQ-8DL 8位VFD数码字符（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">   QATOT:          446.39[1I</span><br><span class="line">   FFESCQATOT:          446.39ESC[1I</span><br></pre></td></tr></table></figure>
+
+<h2 id="中崎ZQ-8DLII-8位VFD数码字符（2400）"><a href="#中崎ZQ-8DLII-8位VFD数码字符（2400）" class="headerlink" title="中崎ZQ-8DLII 8位VFD数码字符（2400）"></a>中崎ZQ-8DLII 8位VFD数码字符（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@QATOT:          448.41[1I</span><br><span class="line">   ESC@ESCQATOT:          448.41ESC[1I</span><br></pre></td></tr></table></figure>
+
+<h2 id="桑达PD100A-双行中文（2400）"><a href="#桑达PD100A-双行中文（2400）" class="headerlink" title="桑达PD100A 双行中文（2400）"></a>桑达PD100A 双行中文（2400）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@QATOT:          448.41[1I</span><br><span class="line">   ESC@ESCQATOT:          448.41ESC[1I</span><br></pre></td></tr></table></figure>
+
+<h2 id="亚仿PD-100C单行串口中文型（9600）"><a href="#亚仿PD-100C单行串口中文型（9600）" class="headerlink" title="亚仿PD-100C单行串口中文型（9600）"></a>亚仿PD-100C单行串口中文型（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1CTOT:  523.47</span><br><span class="line">EOTSOHFF1CETBEOTSTXTOT:  523.47EOTSOFF</span><br></pre></td></tr></table></figure>
+
+<h2 id="东芝LIUST-51-双行英文客显（9600）"><a href="#东芝LIUST-51-双行英文客显（9600）" class="headerlink" title="东芝LIUST-51 双行英文客显（9600）"></a>东芝LIUST-51 双行英文客显（9600）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1C[1;1HSUB:            1.50[2;1HTOT:          529.49</span><br><span class="line">EOTSOHFF1CETBESC[1;1HSUB:            1.50SOFFESC[2;1HTOT:          529.49</span><br></pre></td></tr></table></figure>
+
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/25/Android USB节点获取跟踪/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -568,7 +1039,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-07-02 13:11:04" itemprop="dateModified" datetime="2019-07-02T13:11:04+08:00">2019-07-02</time>
+                <time title="修改时间：2019-07-03 13:31:28" itemprop="dateModified" datetime="2019-07-03T13:31:28+08:00">2019-07-03</time>
               
             
           </span>
@@ -706,6 +1177,12 @@
 <p>du</p>
 </blockquote>
 <h2 id="显示当前文件夹文件的大小"><a href="#显示当前文件夹文件的大小" class="headerlink" title="显示当前文件夹文件的大小"></a>显示当前文件夹文件的大小</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">steveweideMacBook-Pro:linux steve$ du -ah</span><br><span class="line">8.0K	./.DS_Store</span><br><span class="line">4.0K	./file</span><br><span class="line">4.0K	./file1.txt</span><br><span class="line">4.0K	./file1.txt_s</span><br><span class="line">4.0K	./file2</span><br><span class="line">4.0K	./file3</span><br><span class="line"> 28K	.</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>tar</p>
+</blockquote>
+<h2 id="压缩文件"><a href="#压缩文件" class="headerlink" title="压缩文件"></a>压缩文件</h2><p>zcvf命令比较常见的压缩组合,ztvf是常见的不解压查看命令,zxvf是常见的解压组合</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">steveweideMacBook-Pro:linux steve$ tar -zcvf www.gzip www/</span><br><span class="line">a www</span><br><span class="line">a www/1.html</span><br><span class="line">a www/10.html</span><br><span class="line">a www/11.html</span><br><span class="line">a www/12.html</span><br><span class="line">a www/13.html</span><br><span class="line">a www/14.html</span><br><span class="line">a www/15.html</span><br><span class="line">a www/16.html</span><br><span class="line">a www/17.html</span><br><span class="line">a www/18.html</span><br><span class="line">a www/19.html</span><br><span class="line">a www/2.html</span><br><span class="line">a www/20.html</span><br><span class="line">a www/3.html</span><br><span class="line">a www/4.html</span><br><span class="line">a www/5.html</span><br><span class="line">a www/6.html</span><br><span class="line">a www/7.html</span><br><span class="line">a www/8.html</span><br><span class="line">a www/9.html</span><br><span class="line">steveweideMacBook-Pro:linux steve$ tar -ztvf www.gzip </span><br><span class="line">drwxr-xr-x  0 steve  staff       0  7  3 13:19 www/</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/1.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/10.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/11.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/12.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/13.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/14.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/15.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/16.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/17.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/18.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/19.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/2.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/20.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/3.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/4.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/5.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/6.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/7.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/8.html</span><br><span class="line">-rw-r--r--  0 steve  staff       0  7  3 13:19 www/9.html</span><br><span class="line">steveweideMacBook-Pro:linux steve$ tar -zxvf www.gzip -C ./temp</span><br><span class="line">x www/</span><br><span class="line">x www/1.html</span><br><span class="line">x www/10.html</span><br><span class="line">x www/11.html</span><br><span class="line">x www/12.html</span><br><span class="line">x www/13.html</span><br><span class="line">x www/14.html</span><br><span class="line">x www/15.html</span><br><span class="line">x www/16.html</span><br><span class="line">x www/17.html</span><br><span class="line">x www/18.html</span><br><span class="line">x www/19.html</span><br><span class="line">x www/2.html</span><br><span class="line">x www/20.html</span><br><span class="line">x www/3.html</span><br><span class="line">x www/4.html</span><br><span class="line">x www/5.html</span><br><span class="line">x www/6.html</span><br><span class="line">x www/7.html</span><br><span class="line">x www/8.html</span><br></pre></td></tr></table></figure>
           
         
       
@@ -1122,7 +1599,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-count">6</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -1160,7 +1637,11 @@
                     
                       
                     
-                    <span class="site-state-item-count">4</span>
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
                     <span class="site-state-item-name">标签</span>
                   
                 </div>

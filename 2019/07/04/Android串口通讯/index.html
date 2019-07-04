@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="串口通讯串口通讯我们需要直接操作节点文件，一般是tty*。tty是电传打印机的意思，是个人计算机出现之前就已经有了的物种。我们知道，计算机的数据都是01，那么很容易用高低电平模拟数据的传输。那么必须要有个协议来规范，如：RS-232，ttl等 UARTUART个人理解就是一个ic芯片，控制什么时候收发数据，发数据的时候可以用RS232等协议发。 串行数据的格式以下参数来之异步串行数据的一般格式是：">
+<meta name="keywords" content="Android,智能硬件">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android串口通讯">
+<meta property="og:url" content="http://yoursite.com/2019/07/04/Android串口通讯/index.html">
+<meta property="og:site_name" content="Steve&#39;s Blog">
+<meta property="og:description" content="串口通讯串口通讯我们需要直接操作节点文件，一般是tty*。tty是电传打印机的意思，是个人计算机出现之前就已经有了的物种。我们知道，计算机的数据都是01，那么很容易用高低电平模拟数据的传输。那么必须要有个协议来规范，如：RS-232，ttl等 UARTUART个人理解就是一个ic芯片，控制什么时候收发数据，发数据的时候可以用RS232等协议发。 串行数据的格式以下参数来之异步串行数据的一般格式是：">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img-blog.csdn.net/20170525163526578">
+<meta property="og:image" content="https://img-blog.csdn.net/20170525163541454">
+<meta property="og:image" content="https://img-blog.csdn.net/20170525163619407">
+<meta property="og:updated_time" content="2019-07-04T01:25:56.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android串口通讯">
+<meta name="twitter:description" content="串口通讯串口通讯我们需要直接操作节点文件，一般是tty*。tty是电传打印机的意思，是个人计算机出现之前就已经有了的物种。我们知道，计算机的数据都是01，那么很容易用高低电平模拟数据的传输。那么必须要有个协议来规范，如：RS-232，ttl等 UARTUART个人理解就是一个ic芯片，控制什么时候收发数据，发数据的时候可以用RS232等协议发。 串行数据的格式以下参数来之异步串行数据的一般格式是：">
+<meta name="twitter:image" content="https://img-blog.csdn.net/20170525163526578">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/07/04/Android串口通讯/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Android串口通讯 | Steve's Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Steve's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">stay foolish,stay hungery</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/04/Android串口通讯/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Steve">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Steve's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android串口通讯
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-04 09:24:41 / 修改时间：09:25:56" itemprop="dateCreated datePublished" datetime="2019-07-04T09:24:41+08:00">2019-07-04</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="串口通讯"><a href="#串口通讯" class="headerlink" title="串口通讯"></a>串口通讯</h1><p>串口通讯我们需要直接操作节点文件，一般是tty*。tty是电传打印机的意思，是个人计算机出现之前就已经有了的物种。我们知道，计算机的数据都是01，那么很容易用高低电平模拟数据的传输。那么必须要有个协议来规范，如：RS-232，ttl等</p>
+<h2 id="UART"><a href="#UART" class="headerlink" title="UART"></a>UART</h2><p>UART个人理解就是一个ic芯片，控制什么时候收发数据，发数据的时候可以用RS232等协议发。</p>
+<h2 id="串行数据的格式"><a href="#串行数据的格式" class="headerlink" title="串行数据的格式"></a>串行数据的格式</h2><p>以下参数<a href="https://blog.csdn.net/qq_29350001/article/details/72730667" target="_blank" rel="noopener">来之</a><br>异步串行数据的一般格式是：起始位+数据位+停止位，(8-N-1格式) 其中起始位1 位，数据位可以是5、6、7、8位，停止位可以是1、1.5、2位。<br>起始位是一个值为0的位，所以对于正逻辑的TTL电平，起始位是一位时间的低电平；停止位是值为1的位，所以对于正逻辑的TTL电平，停止位是高电平。线路路空闲或者数据传输结束，对于正逻辑的TTL电平，线路总是1。对于负逻辑(如RS-232电平)则相反。</p>
+<p>例如，对于16进制数据55aaH，当采用8位数据位、1位停止位传输时，它在信号线上的波形如图1(TTL电平)和图2(RS-232电平)所示。 （先传第一个字节55，再传第二个字节aa，每个字节都是从低位向高位逐位传输）<br><img src="https://img-blog.csdn.net/20170525163526578" alt="TTL电平的串行数据帧格式(55aah)"></p>
+<p>图1 TTL电平的串行数据帧格式(55aah)</p>
+<p><img src="https://img-blog.csdn.net/20170525163541454" alt="RS-232电平的串行数据帧格式(55aah)"></p>
+<p>图2 RS-232电平的串行数据帧格式(55aah)</p>
+<h2 id="根据波形图计算波特率"><a href="#根据波形图计算波特率" class="headerlink" title="根据波形图计算波特率"></a>根据波形图计算波特率</h2><p>波特率就是一秒内的传输的码元，一个码元相当于一个高或者低电平。类似进行了一次0 1 操作就是2个码元。一个字节是8位，那么比特率是9600的时候，1秒能传输 9600/8 = 1200 byte=1.2 kb 波特率越高，那么传输速度越快。115200/8 = 14400/1024 = 14m每秒。那是相当大的一个数据了。不过由于串口中有起始位和结束位，所以实际有效数据并没那么多。</p>
+<p>如图3是图1在示波器中的显示示意，其中灰色线是示波器的时间分度线，此时假设是200us/格。 </p>
+<p><img src="https://img-blog.csdn.net/20170525163619407" alt="图3 波特率计算示意图"> </p>
+<p>图3 波特率计算示意图 </p>
+<p>可以看了，第一个字节的10位(1位起始位，8位数据位和1位停止位)共占约1.05ms，这样可计算出其波特率约为：<br>10bit / 1.05ms X 1000 ≈ 9600 bit/s<br>如果上图中的时间轴是100us/格，同样可以计算出波特率应是19200bit/s。<br>当通讯不正常，又能观察到波形时，就可根据上述方法，从波形图计算一下波特率是否正确。</p>
+<h2 id="串口通讯流程"><a href="#串口通讯流程" class="headerlink" title="串口通讯流程"></a>串口通讯流程</h2><p>串口的操作一般都通过四个步骤来完成：<br>1、打开串口<br>2、配置串口：对串口的波特率、数据位、停止位、校验码、等进行设置。<br>3、读写串口<br>4、关闭串口</p>
+<h2 id="Android中实现串口通讯"><a href="#Android中实现串口通讯" class="headerlink" title="Android中实现串口通讯"></a>Android中实现串口通讯</h2><p>普遍我们使用的是google实现的一个方案 <a href="https://code.google.com/archive/p/android-serialport-api/" target="_blank" rel="noopener">android-serialport-api</a> 我们项目中也一直这样使用。后来发现Android源码中有一个串口通讯的例子<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/base/tests/SerialChat/" target="_blank" rel="noopener">SerialChat</a>，使用的是<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/base/core/jni/android_hardware_SerialPort.cpp" target="_blank" rel="noopener">android_hardware_SerialPort.cpp</a>的open方法实现的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">#include &quot;utils/Log.h&quot;</span><br><span class="line">#include &quot;jni.h&quot;</span><br><span class="line">#include &quot;JNIHelp.h&quot;</span><br><span class="line">#include &quot;android_runtime/AndroidRuntime.h&quot;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;sys/stat.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;termios.h&gt;</span><br><span class="line">using namespace android;</span><br><span class="line">static jfieldID field_context;</span><br><span class="line">static void</span><br><span class="line">android_hardware_SerialPort_open(JNIEnv *env, jobject thiz, jobject fileDescriptor, jint speed)</span><br><span class="line">&#123;</span><br><span class="line">    switch (speed) &#123;</span><br><span class="line">        case 50:</span><br><span class="line">            speed = B50;</span><br><span class="line">            break;</span><br><span class="line">        case 75:</span><br><span class="line">            speed = B75;</span><br><span class="line">            break;</span><br><span class="line">        case 110:</span><br><span class="line">            speed = B110;</span><br><span class="line">            break;</span><br><span class="line">        case 134:</span><br><span class="line">            speed = B134;</span><br><span class="line">            break;</span><br><span class="line">        case 150:</span><br><span class="line">            speed = B150;</span><br><span class="line">            break;</span><br><span class="line">        case 200:</span><br><span class="line">            speed = B200;</span><br><span class="line">            break;</span><br><span class="line">        case 300:</span><br><span class="line">            speed = B300;</span><br><span class="line">            break;</span><br><span class="line">        case 600:</span><br><span class="line">            speed = B600;</span><br><span class="line">            break;</span><br><span class="line">        case 1200:</span><br><span class="line">            speed = B1200;</span><br><span class="line">            break;</span><br><span class="line">        case 1800:</span><br><span class="line">            speed = B1800;</span><br><span class="line">            break;</span><br><span class="line">        case 2400:</span><br><span class="line">            speed = B2400;</span><br><span class="line">            break;</span><br><span class="line">        case 4800:</span><br><span class="line">            speed = B4800;</span><br><span class="line">            break;</span><br><span class="line">        case 9600:</span><br><span class="line">            speed = B9600;</span><br><span class="line">            break;</span><br><span class="line">        case 19200:</span><br><span class="line">            speed = B19200;</span><br><span class="line">            break;</span><br><span class="line">        case 38400:</span><br><span class="line">            speed = B38400;</span><br><span class="line">            break;</span><br><span class="line">        case 57600:</span><br><span class="line">            speed = B57600;</span><br><span class="line">            break;</span><br><span class="line">        case 115200:</span><br><span class="line">            speed = B115200;</span><br><span class="line">            break;</span><br><span class="line">        case 230400:</span><br><span class="line">            speed = B230400;</span><br><span class="line">            break;</span><br><span class="line">        case 460800:</span><br><span class="line">            speed = B460800;</span><br><span class="line">            break;</span><br><span class="line">        case 500000:</span><br><span class="line">            speed = B500000;</span><br><span class="line">            break;</span><br><span class="line">        case 576000:</span><br><span class="line">            speed = B576000;</span><br><span class="line">            break;</span><br><span class="line">        case 921600:</span><br><span class="line">            speed = B921600;</span><br><span class="line">            break;</span><br><span class="line">        case 1000000:</span><br><span class="line">            speed = B1000000;</span><br><span class="line">            break;</span><br><span class="line">        case 1152000:</span><br><span class="line">            speed = B1152000;</span><br><span class="line">            break;</span><br><span class="line">        case 1500000:</span><br><span class="line">            speed = B1500000;</span><br><span class="line">            break;</span><br><span class="line">        case 2000000:</span><br><span class="line">            speed = B2000000;</span><br><span class="line">            break;</span><br><span class="line">        case 2500000:</span><br><span class="line">            speed = B2500000;</span><br><span class="line">            break;</span><br><span class="line">        case 3000000:</span><br><span class="line">            speed = B3000000;</span><br><span class="line">            break;</span><br><span class="line">        case 3500000:</span><br><span class="line">            speed = B3500000;</span><br><span class="line">            break;</span><br><span class="line">        case 4000000:</span><br><span class="line">            speed = B4000000;</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            jniThrowException(env, &quot;java/lang/IllegalArgumentException&quot;,</span><br><span class="line">                              &quot;Unsupported serial port speed&quot;);</span><br><span class="line">            return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);</span><br><span class="line">    // duplicate the file descriptor, since ParcelFileDescriptor will eventually close its copy</span><br><span class="line">    fd = dup(fd);</span><br><span class="line">    if (fd &lt; 0) &#123;</span><br><span class="line">        jniThrowException(env, &quot;java/io/IOException&quot;, &quot;Could not open serial port&quot;);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    env-&gt;SetIntField(thiz, field_context, fd);</span><br><span class="line">    struct termios tio;</span><br><span class="line">    if (tcgetattr(fd, &amp;tio))</span><br><span class="line">        memset(&amp;tio, 0, sizeof(tio));</span><br><span class="line">    tio.c_cflag =  speed | CS8 | CLOCAL | CREAD;</span><br><span class="line">    // Disable output processing, including messing with end-of-line characters.</span><br><span class="line">    tio.c_oflag &amp;= ~OPOST;//原始数据输出</span><br><span class="line">    tio.c_iflag = IGNPAR;//忽略桢错误和奇偶校验错</span><br><span class="line">    tio.c_lflag = 0; /* turn of CANON, ECHO*, etc *///关闭本地处理</span><br><span class="line">    /* no timeout but request at least one character per read */</span><br><span class="line">    tio.c_cc[VTIME] = 0;</span><br><span class="line">    tio.c_cc[VMIN] = 1;//最小读取到1个字节就返回</span><br><span class="line">    tcsetattr(fd, TCSANOW, &amp;tio);</span><br><span class="line">    tcflush(fd, TCIFLUSH);//如果发生数据溢出，接收数据，但是不再读取</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与<a href="https://code.google.com/archive/p/android-serialport-api/" target="_blank" rel="noopener">android-serialport-api</a> 对比，termios的设置更加丰富。那么我们必须要了解termios的各种设置是什么意思才能确认哪个方案更加适合自己。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct termios</span><br><span class="line">      &#123;</span><br><span class="line">      tcflag_t  c_iflag;  //输入选项</span><br><span class="line">      tcflag_t  c_oflag;  //输出选项</span><br><span class="line">      tcflag_t  c_cflag;  //控制选项</span><br><span class="line">      tcflag_t  c_lflag;  //行选项</span><br><span class="line">      cc_t      c_cc[NCCS]; //控制字符</span><br><span class="line">      &#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">    //修改控制模式，保证程序不会占用串口</span><br><span class="line">    options.c_cflag |= CLOCAL;</span><br><span class="line">    //修改控制模式，使得能够从串口中读取输入数据</span><br><span class="line">    options.c_cflag |= CREAD;</span><br><span class="line"></span><br><span class="line">`</span><br></pre></td></tr></table></figure>
+
+<p>关于termios的设置和参数非常多也复杂，我收集了几篇文章给大家参考.c_iflag，c_oflag，c_cflag等这些控制位的赋值一般都是 | &amp;的方式，<br>比如：<br>c_cflag |= CLOCAL;//忽略 modem 控制线<br>c_oflag &amp;= ~OPOST;//原始数据输出  ~就是非，取反的意思。</p>
+<p>控制字符<em>c_cc</em>中VTIME, VMIN 比较重要，VTIME就是超时时间，可以不设置，VMIN是最小读取数据量。他们组合起来会有各种玩法。摘录了一下：</p>
+<p>*
+控制符VTIME和VMIN之间有复杂的关系。VTIME定义要求等待的时间（百毫米，通常是unsigned char变量），而VMIN定义了要求等待的最小字节数（相比之下，read函数的第三个参数指定了要求读的最大字节数）。<br>如果VTIME=0，VMIN=要求等待读取的最小字节数，read必须在读取了VMIN个字节的数据或者收到一个信号才会返回。<br>如果VTIME=时间量，VMIN=0，不管能否读取到数据，read也要等待VTIME的时间量。<br>如果VTIME=时间量，VMIN=要求等待读取的最小字节数，那么将从read读取第一个字节的数据时开始计时，并会在读取到VMIN个字节或者VTIME时间后返回。<br>如果VTIME=0，VMIN=0，不管能否读取到数据，read都会立即返回。</p>
+<p>*</p>
+<ul>
+<li><a href="https://blog.csdn.net/qq_29350001/article/details/72730667" target="_blank" rel="noopener">UNIX再学习 – RS485 串口编程</a></li>
+<li><a href="http://www.man7.org/linux/man-pages/man3/termios.3.html" target="_blank" rel="noopener">Linux Programmer’s Manual  TERMIOS(3)</a></li>
+<li><a href="https://blog.csdn.net/freezgw1985/article/details/5789190" target="_blank" rel="noopener">linux 串口编程</a></li>
+<li><a href="https://www.cnblogs.com/xiaojianliu/p/8473113.html" target="_blank" rel="noopener">串口编程2：编程基础</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/智能硬件/" rel="tag"># 智能硬件</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/04/客显数据抓包分析/" rel="next" title="客显数据抓包分析">
+                <i class="fa fa-chevron-left"></i> 客显数据抓包分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Steve</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">分类</span>
+                  
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#串口通讯"><span class="nav-number">1.</span> <span class="nav-text">串口通讯</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#UART"><span class="nav-number">1.1.</span> <span class="nav-text">UART</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#串行数据的格式"><span class="nav-number">1.2.</span> <span class="nav-text">串行数据的格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#根据波形图计算波特率"><span class="nav-number">1.3.</span> <span class="nav-text">根据波形图计算波特率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#串口通讯流程"><span class="nav-number">1.4.</span> <span class="nav-text">串口通讯流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android中实现串口通讯"><span class="nav-number">1.5.</span> <span class="nav-text">Android中实现串口通讯</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Steve</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
