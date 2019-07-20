@@ -290,6 +290,176 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/20/Android中USB-HID的理解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Steve">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Steve's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/07/20/Android中USB-HID的理解/" class="post-title-link" itemprop="url">Android中USB-HID的理解</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-20 18:17:29 / 修改时间：21:13:21" itemprop="dateCreated datePublished" datetime="2019-07-20T18:17:29+08:00">2019-07-20</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>最近在把公司的一款串口键盘转USB的方式接入,拿到键盘之后我觉得应该很快就能完成这个功能.后来发现事情没那么简单,网上找了一些例子,大部分是基于<em>bulkTransfer</em>方法进行.但是我们这样读取到的数据和预期的很不一致,这引发了我疑问.经过和电子工程师的交流,对方告知我是不是因为机器的驱动不一致导致的.我就叫我们公司的电子工程师联系方案商,准备出一个针对这个usb芯片的rom过来再试.在这个过程中,我就想usb口应该是比较通用的方式了,为什么需要针对每个固件编写驱动呢.android没说过这方面的内容呀.然后就有了这篇爬坑记录.</p>
+<p>##<br>先去网上看看例子,大家都怎么通讯的.找到了一些文章,例如:<a href="https://www.jianshu.com/p/e2e57cddac6a" target="_blank" rel="noopener">android USB通信</a>和<a href="https://blog.csdn.net/mountain_eyes/article/details/80558834" target="_blank" rel="noopener">Android USB 开发详解</a>,大部分都是针对标准usb来实现的.但是我们的键盘是经过转换的,usb转串口方式实现的.我们知道,串口通讯的时候是需要设置波特率的,那么我们看看这两篇文章写的通讯方式,<em>UsbDeviceConnection.bulkTransfer</em> 并没有看到哪里可设置波特率.  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">usbConnection.bulkTransfer(usbEndpointOut, bytes, bytes.length, 500);</span><br></pre></td></tr></table></figure>
+
+<p>继续查看,发现还有另一个方式可以进行通讯,<em>controlTransfer</em>,这个设置的参数丰富多彩多了,那么是不是就是这个方法可以实现通讯呢?我们先看看方法的定义.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public int controlTransfer (int requestType, int request, int value, int index, byte[] buffer, int length, int timeout)</span><br><span class="line">Added in API level 12</span><br><span class="line">Performs a control transaction on endpoint zero for this device. The direction of the transfer is determined by the request type. If requestType &amp; USB_ENDPOINT_DIR_MASK is USB_DIR_OUT, then the transfer is a write, and if it is USB_DIR_IN, then the transfer is a read.</span><br><span class="line"></span><br><span class="line">This method transfers data starting from index 0 in the buffer. To specify a different offset, use controlTransfer(int, int, int, int, byte[], int, int, int).</span><br><span class="line"></span><br><span class="line">Parameters</span><br><span class="line">requestType	request type for this transaction</span><br><span class="line">request	request ID for this transaction</span><br><span class="line">value	value field for this transaction</span><br><span class="line">index	index field for this transaction</span><br><span class="line">buffer	buffer for data portion of transaction, or null if no data needs to be sent or received</span><br><span class="line">length	the length of the data to send or receive</span><br><span class="line">timeout	in milliseconds</span><br><span class="line">Returns</span><br><span class="line">length of data transferred (or zero) for success, or negative value for failure</span><br></pre></td></tr></table></figure>
+
+<p>解析得比较简单,经过了解,其实这些设置需要参考对应芯片的型号类型的,比如:<a href="http://www.prolific.com.tw/US/ShowProduct.aspx?p_id=230&pcid=41" target="_blank" rel="noopener">PL2303</a>,<a href="http://www.wch.cn/download/CH341SER_ANDROID_ZIP.html" target="_blank" rel="noopener">CH34X</a> 等这些,官方网站上都对应的demo.拿到代码之后,进行对应的设备就可以通讯了,发现都是针对不同的型号进行不同的设备,这些都可以理解为是固定写法,以后可以再研究研究,但是到目前就可以基本可以进行通讯了.怎么确认你的usb是哪种芯片呢?其实可以通过<em>/proc/bus/input/devices</em>等看到这些信息,也可以枚举usbdevices的时候可以查看厂商id和产品id来搜索出型号.</p>
+<h2 id="HID"><a href="#HID" class="headerlink" title="HID"></a>HID</h2><p>USB有标准的协议,USB有很多种类型,比如音频输出,鼠标,键盘.USB-HID是指键盘,鼠标这类,有用户交互的设备.usb标准协议下的hid协议有一些特殊的描述符,这些内容还是挺复杂的.官方介绍:<a href="https://usb.org.10-1-108-210.causewaynow.com/sites/default/files/documents/hut1_12v2.pdf" target="_blank" rel="noopener">HID Usage Tables 1.12</a></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>经过这样之后,发现android已经支持了标准的hid协议,所以基于这些协议的设备,肯定可以免驱动就实现通讯了,至于其他的linux设备,那我就不清楚是不是可以这样了.我觉得可参考android的源码,那么基本也是没问题的.这些写得比较随意,怕自己忘记了,先把关键节点写出来,后面再慢慢优化.小小的usb就这么多内容,感觉还是比较惊讶,感觉自己的知识不足,学海无涯,大家一起努力吧.</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/04/Android串口通讯/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1039,7 +1209,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-07-14 18:39:16" itemprop="dateModified" datetime="2019-07-14T18:39:16+08:00">2019-07-14</time>
+                <time title="修改时间：2019-07-20 18:07:11" itemprop="dateModified" datetime="2019-07-20T18:07:11+08:00">2019-07-20</time>
               
             
           </span>
@@ -1195,6 +1365,12 @@
 </blockquote>
 <h2 id="压缩文件-2"><a href="#压缩文件-2" class="headerlink" title="压缩文件"></a>压缩文件</h2><p>压缩某文件和文件夹都可以</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">steveweideMacBook-Pro:linux steve$ zip -r www9 www</span><br><span class="line">  adding: www/ (stored 0%)</span><br><span class="line">  adding: www/1.html (stored 0%)</span><br><span class="line">  adding: www/10.html (stored 0%)</span><br><span class="line">  adding: www/11.html (stored 0%)</span><br><span class="line">  adding: www/12.html (stored 0%)</span><br><span class="line">  adding: www/13.html (stored 0%)</span><br><span class="line">  adding: www/14.html (stored 0%)</span><br><span class="line">  adding: www/15.html (stored 0%)</span><br><span class="line">  adding: www/16.html (stored 0%)</span><br><span class="line">  adding: www/17.html (stored 0%)</span><br><span class="line">  adding: www/18.html (stored 0%)</span><br><span class="line">  adding: www/19.html (stored 0%)</span><br><span class="line">  adding: www/2.html (stored 0%)</span><br><span class="line">  adding: www/20.html (stored 0%)</span><br><span class="line">  adding: www/3.html (stored 0%)</span><br><span class="line">  adding: www/4.html (stored 0%)</span><br><span class="line">  adding: www/5.html (stored 0%)</span><br><span class="line">  adding: www/6.html (stored 0%)</span><br><span class="line">  adding: www/7.html (stored 0%)</span><br><span class="line">  adding: www/8.html (stored 0%)</span><br><span class="line">  adding: www/9.html (stored 0%)</span><br><span class="line"></span><br><span class="line">  steveweideMacBook-Pro:linux steve$ unzip -l www9.zip </span><br><span class="line">Archive:  www9.zip</span><br><span class="line">  Length      Date    Time    Name</span><br><span class="line">---------  ---------- -----   ----</span><br><span class="line">        0  07-03-2019 13:19   www/</span><br><span class="line">        0  07-03-2019 13:19   www/1.html</span><br><span class="line">        0  07-03-2019 13:19   www/10.html</span><br><span class="line">        0  07-03-2019 13:19   www/11.html</span><br><span class="line">        0  07-03-2019 13:19   www/12.html</span><br><span class="line">        0  07-03-2019 13:19   www/13.html</span><br><span class="line">        0  07-03-2019 13:19   www/14.html</span><br><span class="line">        0  07-03-2019 13:19   www/15.html</span><br><span class="line">        0  07-03-2019 13:19   www/16.html</span><br><span class="line">        0  07-03-2019 13:19   www/17.html</span><br><span class="line">        0  07-03-2019 13:19   www/18.html</span><br><span class="line">        0  07-03-2019 13:19   www/19.html</span><br><span class="line">        0  07-03-2019 13:19   www/2.html</span><br><span class="line">        0  07-03-2019 13:19   www/20.html</span><br><span class="line">        0  07-03-2019 13:19   www/3.html</span><br><span class="line">        0  07-03-2019 13:19   www/4.html</span><br><span class="line">        0  07-03-2019 13:19   www/5.html</span><br><span class="line">        0  07-03-2019 13:19   www/6.html</span><br><span class="line">        0  07-03-2019 13:19   www/7.html</span><br><span class="line">        0  07-03-2019 13:19   www/8.html</span><br><span class="line">        0  07-03-2019 13:19   www/9.html</span><br><span class="line">---------                     -------</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>lsof</p>
+</blockquote>
+<h2 id="sof-list-open-files-是一个列出当前系统打开文件的工具。"><a href="#sof-list-open-files-是一个列出当前系统打开文件的工具。" class="headerlink" title="sof(list open files)是一个列出当前系统打开文件的工具。"></a>sof(list open files)是一个列出当前系统打开文件的工具。</h2><p>lsof 查看端口占用语法格式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -i:端口号</span><br></pre></td></tr></table></figure>
 
 <blockquote>
 <p>kill</p>
@@ -1617,7 +1793,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-count">7</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
