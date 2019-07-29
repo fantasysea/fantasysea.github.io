@@ -290,6 +290,209 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/29/Android如何对libusb进行编译和使用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Steve">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Steve's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/07/29/Android如何对libusb进行编译和使用/" class="post-title-link" itemprop="url">Android如何对libusb进行编译和使用</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-29 23:21:20 / 修改时间：23:22:17" itemprop="dateCreated datePublished" datetime="2019-07-29T23:21:20+08:00">2019-07-29</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Android项目中对libusb进行编译和使用"><a href="#Android项目中对libusb进行编译和使用" class="headerlink" title="Android项目中对libusb进行编译和使用"></a>Android项目中对libusb进行编译和使用</h1><p>最近项目中对usb进行使用的场景比较多,了解到libusb是比较出名的usb跨平台方案,学习libusb可以对android/linux底层的外设usb直接进行操作,理论上可以绕开android的弹窗授权限制.另外如果以后进行业务的移植会比较迅速.网上看了一些例子,有说修改源码的,增加方法然后android列出usb节点之后进行操作的.其实demo不需要那么复杂,这个库本来就能列出节点,也不需要usb授权之类的操作.另外使用android自带的可能还会导致没法搜索到usb节点,需要在<em>/system/etc/permissions</em>下添加<em>android.hardware.usb.host.xml</em>文件之后重启设备.</p>
+<h2 id="下载源码编译-方法一–ndk-build先编译libusb-然后导入so库和头文件使用"><a href="#下载源码编译-方法一–ndk-build先编译libusb-然后导入so库和头文件使用" class="headerlink" title="下载源码编译,方法一–ndk-build先编译libusb,然后导入so库和头文件使用"></a>下载源码编译,方法一–ndk-build先编译libusb,然后导入so库和头文件使用</h2><p>首先我们去<a href="https://libusb.info/" target="_blank" rel="noopener">官网</a>的Downloads下载<a href="https://github.com/libusb/libusb/releases" target="_blank" rel="noopener">Latest Sources</a>.解压之后进去android-jni目录.这个时候我们可以看到<em>README</em>文件,已经有编译方案了.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Building:</span><br><span class="line">---------</span><br><span class="line"></span><br><span class="line">To build libusb for Android do the following:</span><br><span class="line"></span><br><span class="line"> 1. Download the latest NDK from:</span><br><span class="line">    http://developer.android.com/tools/sdk/ndk/index.html</span><br><span class="line"></span><br><span class="line"> 2. Extract the NDK.</span><br><span class="line"></span><br><span class="line"> 3. Open a shell and make sure there exist an NDK global variable</span><br><span class="line">    set to the directory where you extracted the NDK.</span><br><span class="line"></span><br><span class="line"> 4. Change directory to libusb&apos;s &quot;android/jni&quot;</span><br><span class="line"></span><br><span class="line"> 5. Run &quot;$NDK/ndk-build&quot;.</span><br><span class="line"></span><br><span class="line">The libusb library, examples and tests can then be found in:</span><br><span class="line">    &quot;android/libs/$ARCH&quot;</span><br><span class="line"></span><br><span class="line">Where $ARCH is one of:</span><br><span class="line">    armeabi</span><br><span class="line">    armeabi-v7a</span><br><span class="line">    mips</span><br><span class="line">    mips64</span><br><span class="line">    x86</span><br><span class="line">    x86_64</span><br><span class="line">Installing</span><br><span class="line">-----------</span><br><span class="line">.......</span><br><span class="line">..........</span><br></pre></td></tr></table></figure>
+
+<p>因为我要直接在app里面使用,所以我只是进行编译,<em>Installing</em>部分我直接忽略.编译我们可以参考这篇文章<a href="https://blog.csdn.net/hongbochen1223/article/details/52957421" target="_blank" rel="noopener">android开发ndk调用第三方so库</a>,下面我会把我的android.mk文件释放出来.</p>
+<h3 id="几个坑"><a href="#几个坑" class="headerlink" title="几个坑"></a>几个坑</h3><ul>
+<li>找不到”libusb.h”`  
+我由于没这样使用过,头文件一直提示找不到,如:<code>fatal error: &#39;libusb.h&#39; file not found #include &quot;libusb.h&quot;</code> ,这个我们时候的时候需要在添加头文件的路径<strong>LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../libusb/libusb</strong>.这样就能搜索到头文件,不然没法使用.</li>
+<li>libusb.so: incompatible target error: undefined reference to ‘libusb_init’<br>这个bug浪费了我很多时间,是由于我一开始拷贝的so文件仅仅是<em>arm64-v8a</em>类型的<em>LOCAL_SRC_FILES := libusb.so</em>,但是我编译的时候没留意到,所以一直报错,一直找不到libusb_init,我都怀疑是头文件导入不合理,google了很久,有一次突然发现<em>arm64-v8a</em>目录下的so文件生成了(也可能编译不出来,<em>arm64-v8a</em>是碰巧第一执行,如果<em>armeabi-v7a</em>先编译那么直接就中断编译了),在后来在<a href="https://stackoverflow.com/questions/30053103/ndk-build-so-incompatible-target-prebuilt-shared-library" target="_blank" rel="noopener">stackoverflow</a>上居然也找到了这个bug的解释.后来我把所有的lib包都添加到lib目录下,修改LOCAL_SRC_FILES := libs/arm64-v8a/libusb.so,<em>Application.mk</em>也修改APP_ABI := armeabi-v7a成对应的cup类型那个.每修改一次cpu类型就编译一次,应该也可以直接添加多个cpu类型的so,然后一次编译,不过我试过不行,后面可以继续尝试.</li>
+</ul>
+<h3 id="testlibusb的jni的目录结构"><a href="#testlibusb的jni的目录结构" class="headerlink" title="testlibusb的jni的目录结构"></a>testlibusb的jni的目录结构</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">jni</span><br><span class="line">├── Android.mk</span><br><span class="line">├── Application.mk</span><br><span class="line">├── libusb</span><br><span class="line">│   ├── aclocal.m4</span><br><span class="line">│   ├── android</span><br><span class="line">│   ├── AUTHORS</span><br><span class="line">│   ├── ChangeLog</span><br><span class="line">│   ├── compile</span><br><span class="line">│   ├── config.guess</span><br><span class="line">│   ├── config.h.in</span><br><span class="line">│   ├── config.sub</span><br><span class="line">│   ├── configure</span><br><span class="line">│   ├── configure.ac</span><br><span class="line">│   ├── COPYING</span><br><span class="line">│   ├── depcomp</span><br><span class="line">│   ├── doc</span><br><span class="line">│   ├── examples</span><br><span class="line">│   ├── INSTALL</span><br><span class="line">│   ├── install-sh</span><br><span class="line">│   ├── libusb</span><br><span class="line">│   ├── libusb-1.0.pc.in</span><br><span class="line">│   ├── ltmain.sh</span><br><span class="line">│   ├── m4</span><br><span class="line">│   ├── Makefile.am</span><br><span class="line">│   ├── Makefile.in</span><br><span class="line">│   ├── missing</span><br><span class="line">│   ├── msvc</span><br><span class="line">│   ├── NEWS</span><br><span class="line">│   ├── PORTING</span><br><span class="line">│   ├── README</span><br><span class="line">│   ├── tests</span><br><span class="line">│   ├── TODO</span><br><span class="line">│   └── Xcode</span><br><span class="line">└── testlibusb</span><br><span class="line">    ├── Android.mk</span><br><span class="line">    ├── libs</span><br><span class="line">    └── testlibusb.cpp</span><br></pre></td></tr></table></figure>
+
+<h3 id="TestLibusb-app-src-main-jni-Application-mk文件内容"><a href="#TestLibusb-app-src-main-jni-Application-mk文件内容" class="headerlink" title="/TestLibusb/app/src/main/jni/Application.mk文件内容"></a>/TestLibusb/app/src/main/jni/Application.mk文件内容</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># APP_ABI := all</span><br><span class="line">APP_ABI := armeabi-v7a</span><br><span class="line"># Workaround for MIPS toolchain linker being unable to find liblog dependency</span><br><span class="line"># of shared object in NDK versions at least up to r9.</span><br><span class="line">#</span><br><span class="line">APP_LDFLAGS := -llog</span><br></pre></td></tr></table></figure>
+
+<h3 id="TestLibusb-app-src-main-jni-Android-mk-文件内容"><a href="#TestLibusb-app-src-main-jni-Android-mk-文件内容" class="headerlink" title="TestLibusb/app/src/main/jni/Android.mk 文件内容"></a>TestLibusb/app/src/main/jni/Android.mk 文件内容</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_PATH2:= $(call my-dir)</span><br><span class="line">include $(CLEAR_VARS)</span><br><span class="line"># include $(LOCAL_PATH2)/libusb/android/jni/Android.mk</span><br><span class="line">include $(LOCAL_PATH2)/testlibusb/Android.mk</span><br></pre></td></tr></table></figure>
+
+<h3 id="TestLibusb-app-src-main-jni-testlibusb-Android-mk-文件内容"><a href="#TestLibusb-app-src-main-jni-testlibusb-Android-mk-文件内容" class="headerlink" title="/TestLibusb/app/src/main/jni/testlibusb/Android.mk 文件内容"></a>/TestLibusb/app/src/main/jni/testlibusb/Android.mk 文件内容</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_PATH	:= $(call my-dir)</span><br><span class="line">include $(CLEAR_VARS)</span><br><span class="line"></span><br><span class="line">######################################################################</span><br><span class="line"># Make shared library libUVCCamera.so</span><br><span class="line">######################################################################</span><br><span class="line">CFLAGS := -Werror</span><br><span class="line"></span><br><span class="line">LOCAL_LDLIBS := -llog</span><br><span class="line">##LOCAL_SHARED_LIBRARIES += libusb</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#------test-------------</span><br><span class="line"></span><br><span class="line">include $(CLEAR_VARS)</span><br><span class="line">LOCAL_MODULE := myusb</span><br><span class="line">#LOCAL_SRC_FILES := libs/arm64-v8a/libusb.so</span><br><span class="line">LOCAL_SRC_FILES := libs/armeabi-v7a/libusb.so</span><br><span class="line">#LOCAL_SRC_FILES := libs/x86/libusb.so</span><br><span class="line"># LOCAL_SRC_FILES := libs/x86_64/libusb.so</span><br><span class="line">LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../libusb/libusb</span><br><span class="line">include $(PREBUILT_SHARED_LIBRARY)</span><br><span class="line"></span><br><span class="line">include $(CLEAR_VARS)</span><br><span class="line"></span><br><span class="line">#-------end----------------</span><br><span class="line"></span><br><span class="line">LOCAL_SHARED_LIBRARIES += myusb</span><br><span class="line"></span><br><span class="line">LOCAL_SRC_FILES := \</span><br><span class="line">		./testlibusb.cpp \</span><br><span class="line"></span><br><span class="line">LOCAL_MODULE    := testlibusb</span><br><span class="line">include $(BUILD_SHARED_LIBRARY)</span><br></pre></td></tr></table></figure>
+
+<h3 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">➜  jni ndk-build      </span><br><span class="line">Android NDK: APP_PLATFORM not set. Defaulting to minimum supported version android-16.    </span><br><span class="line">Android NDK: WARNING: APP_PLATFORM android-16 is higher than android:minSdkVersion 1 in /home/steve/work/android/AndroidStudioProjects/TestLibusb/app/src/main/AndroidManifest.xml. NDK binaries will *not* be compatible with devices older than android-16. See https://android.googlesource.com/platform/ndk/+/master/docs/user/common_problems.md for more information.    </span><br><span class="line">[armeabi-v7a] Compile++ thumb: testlibusb &lt;= testlibusb.cpp</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= core.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= descriptor.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= hotplug.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= io.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= sync.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= strerror.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= linux_usbfs.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= poll_posix.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= threads_posix.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= linux_netlink.c</span><br><span class="line">[armeabi-v7a] SharedLibrary  : libusb.so</span><br><span class="line">[armeabi-v7a] StaticLibrary  : libstdc++.a</span><br><span class="line">[armeabi-v7a] SharedLibrary  : libtestlibusb.so</span><br><span class="line">[armeabi-v7a] Install        : libtestlibusb.so =&gt; libs/armeabi-v7a/libtestlibusb.so</span><br><span class="line">[armeabi-v7a] Install        : libusb.so =&gt; libs/armeabi-v7a/libusb.so</span><br></pre></td></tr></table></figure>
+
+<h2 id="下载源码编译-方法二–ndk-build编译adnrod-mk文件直接使用"><a href="#下载源码编译-方法二–ndk-build编译adnrod-mk文件直接使用" class="headerlink" title="下载源码编译,方法二–ndk-build编译adnrod.mk文件直接使用"></a>下载源码编译,方法二–ndk-build编译adnrod.mk文件直接使用</h2><p>其实我一开始不是按照方法一使用的,是先参考的<a href="https://github.com/saki4510t/UVCCamera" target="_blank" rel="noopener">UVCCamera</a>的使用方式,也是爬了一些坑,把mk文件贴出来先.</p>
+<h3 id="TestLibusb-app-src-main-jni-Application-mk文件内容-1"><a href="#TestLibusb-app-src-main-jni-Application-mk文件内容-1" class="headerlink" title="/TestLibusb/app/src/main/jni/Application.mk文件内容"></a>/TestLibusb/app/src/main/jni/Application.mk文件内容</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">APP_ABI := all</span><br><span class="line"># Workaround for MIPS toolchain linker being unable to find liblog dependency</span><br><span class="line"># of shared object in NDK versions at least up to r9.</span><br><span class="line">#</span><br><span class="line">APP_LDFLAGS := -llog</span><br></pre></td></tr></table></figure>
+
+<h3 id="TestLibusb-app-src-main-jni-Android-mk-文件内容-1"><a href="#TestLibusb-app-src-main-jni-Android-mk-文件内容-1" class="headerlink" title="TestLibusb/app/src/main/jni/Android.mk 文件内容"></a>TestLibusb/app/src/main/jni/Android.mk 文件内容</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_PATH2:= $(call my-dir)</span><br><span class="line">include $(CLEAR_VARS)</span><br><span class="line">include $(LOCAL_PATH2)/libusb/android/jni/Android.mk</span><br><span class="line">include $(LOCAL_PATH2)/testlibusb/Android.mk</span><br></pre></td></tr></table></figure>
+
+<h3 id="TestLibusb-app-src-main-jni-testlibusb-Android-mk-文件内容-1"><a href="#TestLibusb-app-src-main-jni-testlibusb-Android-mk-文件内容-1" class="headerlink" title="/TestLibusb/app/src/main/jni/testlibusb/Android.mk 文件内容"></a>/TestLibusb/app/src/main/jni/testlibusb/Android.mk 文件内容</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_PATH	:= $(call my-dir)</span><br><span class="line">include $(CLEAR_VARS)</span><br><span class="line"></span><br><span class="line">######################################################################</span><br><span class="line"># Make shared library libUVCCamera.so</span><br><span class="line">######################################################################</span><br><span class="line">CFLAGS := -Werror</span><br><span class="line"></span><br><span class="line">LOCAL_LDLIBS := -llog</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">LOCAL_SHARED_LIBRARIES += libusb</span><br><span class="line"></span><br><span class="line">LOCAL_SRC_FILES := \</span><br><span class="line">		./testlibusb.cpp \</span><br><span class="line"></span><br><span class="line">LOCAL_MODULE    := testlibusb</span><br><span class="line">include $(BUILD_SHARED_LIBRARY)</span><br></pre></td></tr></table></figure>
+
+<h3 id="编译过程-1"><a href="#编译过程-1" class="headerlink" title="编译过程"></a>编译过程</h3><p>这个方案不需要进行so的导入,很方便,各个cpu也直接能编译出来了.这也是我方案一在多个so同时导入编译不成功之后不继续的原因,因为有更好的方案了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">➜  jni ndk-build      </span><br><span class="line">Android NDK: APP_PLATFORM not set. Defaulting to minimum supported version android-16.    </span><br><span class="line">Android NDK: WARNING: APP_PLATFORM android-16 is higher than android:minSdkVersion 1 in /home/steve/work/android/AndroidStudioProjects/TestLibusb/app/src/main/AndroidManifest.xml. NDK binaries will *not* be compatible with devices older than android-16. See https://android.googlesource.com/platform/ndk/+/master/docs/user/common_problems.md for more information.    </span><br><span class="line">[arm64-v8a] Compile++      : testlibusb &lt;= testlibusb.cpp</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= core.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= descriptor.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= hotplug.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= io.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= sync.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= strerror.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= linux_usbfs.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= poll_posix.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= threads_posix.c</span><br><span class="line">[arm64-v8a] Compile        : usb &lt;= linux_netlink.c</span><br><span class="line">[arm64-v8a] SharedLibrary  : libusb.so</span><br><span class="line">[arm64-v8a] StaticLibrary  : libstdc++.a</span><br><span class="line">[arm64-v8a] SharedLibrary  : libtestlibusb.so</span><br><span class="line">[arm64-v8a] Install        : libtestlibusb.so =&gt; libs/arm64-v8a/libtestlibusb.so</span><br><span class="line">[arm64-v8a] Install        : libusb.so =&gt; libs/arm64-v8a/libusb.so</span><br><span class="line">[x86_64] Compile++      : testlibusb &lt;= testlibusb.cpp</span><br><span class="line">[x86_64] Compile        : usb &lt;= core.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= descriptor.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= hotplug.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= io.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= sync.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= strerror.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= linux_usbfs.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= poll_posix.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= threads_posix.c</span><br><span class="line">[x86_64] Compile        : usb &lt;= linux_netlink.c</span><br><span class="line">[x86_64] SharedLibrary  : libusb.so</span><br><span class="line">[x86_64] StaticLibrary  : libstdc++.a</span><br><span class="line">[x86_64] SharedLibrary  : libtestlibusb.so</span><br><span class="line">[x86_64] Install        : libtestlibusb.so =&gt; libs/x86_64/libtestlibusb.so</span><br><span class="line">[x86_64] Install        : libusb.so =&gt; libs/x86_64/libusb.so</span><br><span class="line">[armeabi-v7a] Compile++ thumb: testlibusb &lt;= testlibusb.cpp</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= core.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= descriptor.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= hotplug.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= io.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= sync.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= strerror.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= linux_usbfs.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= poll_posix.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= threads_posix.c</span><br><span class="line">[armeabi-v7a] Compile thumb  : usb &lt;= linux_netlink.c</span><br><span class="line">[armeabi-v7a] SharedLibrary  : libusb.so</span><br><span class="line">[armeabi-v7a] StaticLibrary  : libstdc++.a</span><br><span class="line">[armeabi-v7a] SharedLibrary  : libtestlibusb.so</span><br><span class="line">[armeabi-v7a] Install        : libtestlibusb.so =&gt; libs/armeabi-v7a/libtestlibusb.so</span><br><span class="line">[armeabi-v7a] Install        : libusb.so =&gt; libs/armeabi-v7a/libusb.so</span><br><span class="line">[x86] Compile++      : testlibusb &lt;= testlibusb.cpp</span><br><span class="line">[x86] Compile        : usb &lt;= core.c</span><br><span class="line">[x86] Compile        : usb &lt;= descriptor.c</span><br><span class="line">[x86] Compile        : usb &lt;= hotplug.c</span><br><span class="line">[x86] Compile        : usb &lt;= io.c</span><br><span class="line">[x86] Compile        : usb &lt;= sync.c</span><br><span class="line">[x86] Compile        : usb &lt;= strerror.c</span><br><span class="line">[x86] Compile        : usb &lt;= linux_usbfs.c</span><br><span class="line">[x86] Compile        : usb &lt;= poll_posix.c</span><br><span class="line">[x86] Compile        : usb &lt;= threads_posix.c</span><br><span class="line">[x86] Compile        : usb &lt;= linux_netlink.c</span><br><span class="line">[x86] SharedLibrary  : libusb.so</span><br><span class="line">[x86] StaticLibrary  : libstdc++.a</span><br><span class="line">[x86] SharedLibrary  : libtestlibusb.so</span><br><span class="line">[x86] Install        : libtestlibusb.so =&gt; libs/x86/libtestlibusb.so</span><br><span class="line">[x86] Install        : libusb.so =&gt; libs/x86/libusb.so</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>方案二很适合我们有源码的情况,这样能快速的编译使用,配置也更加简单.由于现在android studio都使用cmake编译,所以接下来就是用尝试直接配置<strong>CMakeLists.txt</strong>文件进行编译.这部分实现了再更新.</p>
+<h2 id="使用libusb的例子打印usb设备"><a href="#使用libusb的例子打印usb设备" class="headerlink" title="使用libusb的例子打印usb设备"></a>使用libusb的例子打印usb设备</h2><p>我看了下<strong>app/src/main/jni/libusb/examples</strong>下的例子,<strong>listdevs.c</strong>比较简单,那么我们就进行藏这个demo的尝试.</p>
+<h3 id="MainActivity文件"><a href="#MainActivity文件" class="headerlink" title="MainActivity文件"></a>MainActivity文件</h3><p>这个文件很简单,导入** System.loadLibrary(“testlibusb”);<strong>,定义jni方法</strong>public native String getubs();**.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity &#123;</span><br><span class="line"></span><br><span class="line">    // Used to load the &apos;native-lib&apos; library on application startup.</span><br><span class="line">    static &#123;</span><br><span class="line">//        System.loadLibrary(&quot;usb&quot;);</span><br><span class="line">        System.loadLibrary(&quot;testlibusb&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        findViewById(R.id.buttonPlay).setOnClickListener(new View.OnClickListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onClick(View view) &#123;</span><br><span class="line">                Log.e(&quot;device&quot;,&quot;call getubs &quot;);</span><br><span class="line">                getubs();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * A native method that is implemented by the &apos;native-lib&apos; native library,</span><br><span class="line">     * which is packaged with this application.</span><br><span class="line">     */</span><br><span class="line">    public native String getubs();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="app-src-main-jni-testlibusb-testlibusb-cpp文件"><a href="#app-src-main-jni-testlibusb-testlibusb-cpp文件" class="headerlink" title="app/src/main/jni/testlibusb/testlibusb.cpp文件"></a>app/src/main/jni/testlibusb/testlibusb.cpp文件</h3><p><em>print_devs</em>内容从<strong>listdevs.c</strong>中拷贝修改过来</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">//</span><br><span class="line">// Created by steve on 19-7-23.</span><br><span class="line">//</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;jni.h&gt;</span><br><span class="line">#include &quot;libusb.h&quot;</span><br><span class="line">#include &lt;stddef.h&gt;</span><br><span class="line">#include &quot;libusb.h&quot;</span><br><span class="line">#include &lt;android/log.h&gt;</span><br><span class="line">#define TAG    &quot;libusb&quot; // 这个是自定义的LOG的标识</span><br><span class="line">#define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型</span><br><span class="line">static void print_devs()</span><br><span class="line">&#123;</span><br><span class="line">	libusb_device **devs;</span><br><span class="line">	int r;</span><br><span class="line">	ssize_t cnt;</span><br><span class="line">    LOGD(&quot;print_devs&quot;);</span><br><span class="line">	r = libusb_init(NULL);</span><br><span class="line">    LOGD(&quot;libusb_init&quot;);</span><br><span class="line"></span><br><span class="line">	cnt = libusb_get_device_list(NULL, &amp;devs);</span><br><span class="line"></span><br><span class="line">    LOGD(&quot;libusb_get_device_list&quot;);</span><br><span class="line"></span><br><span class="line">	libusb_device *dev;</span><br><span class="line">	int i = 0, j = 0;</span><br><span class="line">	uint8_t path[8];</span><br><span class="line"></span><br><span class="line">	while ((dev = devs[i++]) != NULL) &#123;</span><br><span class="line">		struct libusb_device_descriptor desc;</span><br><span class="line">		int r = libusb_get_device_descriptor(dev, &amp;desc);</span><br><span class="line">		if (r &lt; 0) &#123;</span><br><span class="line">			LOGD(&quot;failed to get device descriptor&quot;);</span><br><span class="line">		&#125;</span><br><span class="line">		LOGD(&quot;%04x:%04x (bus %d, device %d)&quot;,</span><br><span class="line">			desc.idVendor, desc.idProduct,</span><br><span class="line">			libusb_get_bus_number(dev), libusb_get_device_address(dev));</span><br><span class="line"></span><br><span class="line">		r = libusb_get_port_numbers(dev, path, sizeof(path));</span><br><span class="line">		if (r &gt; 0) &#123;</span><br><span class="line">			LOGD(&quot; path: %d&quot;, path[0]);</span><br><span class="line">			for (j = 1; j &lt; r; j++)</span><br><span class="line">				printf(&quot;.%d&quot;, path[j]);</span><br><span class="line">		&#125;</span><br><span class="line">		printf(&quot;\n&quot;);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">		libusb_free_device_list(devs, 1);</span><br><span class="line"></span><br><span class="line">    	libusb_exit(NULL);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">extern &quot;C&quot;</span><br><span class="line">JNIEXPORT jstring JNICALL</span><br><span class="line">Java_com_example_testlibusb_MainActivity_getubs</span><br><span class="line">  (JNIEnv *env, jobject obj)&#123;</span><br><span class="line">        print_devs();</span><br><span class="line">         //test();</span><br><span class="line"></span><br><span class="line">         return env-&gt;NewStringUTF(&quot;111&quot;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h3><p>点击<em>button</em>,执行<em>getubs</em>方法就可以打印出系统的usb设备,日志如下:  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">07-25 00:00:54.963 23280-23280/com.example.testlibusb D/libusb: print_devs</span><br><span class="line">07-25 00:00:54.965 23280-23280/com.example.testlibusb D/libusb: libusb_init</span><br><span class="line">07-25 00:00:54.965 23280-23280/com.example.testlibusb D/libusb: libusb_get_device_list</span><br><span class="line">07-25 00:00:54.966 23280-23280/com.example.testlibusb D/libusb: 1c4f:0065 (bus 1, device 18)</span><br><span class="line">07-25 00:00:54.966 23280-23280/com.example.testlibusb D/libusb:  path: 1</span><br><span class="line">07-25 00:00:54.966 23280-23280/com.example.testlibusb D/libusb: 1d6b:0002 (bus 1, device 1)</span><br></pre></td></tr></table></figure>
+
+<p>1c4f就是VendorId,0065就是ProductId,有了这2个就可以过滤出你想要的设备,之后就能进行数据的读取和发送了,这块后面有时间再研究.</p>
+<h2 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h2><p>这个使用需要先ndk编译后使用,整个编译和使用已经可以完整走通,之后还需要研究使用cmake编译,和设备信息的读取.</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/20/Android中USB-HID的理解/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1209,7 +1412,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-07-20 18:07:11" itemprop="dateModified" datetime="2019-07-20T18:07:11+08:00">2019-07-20</time>
+                <time title="修改时间：2019-07-28 21:28:16" itemprop="dateModified" datetime="2019-07-28T21:28:16+08:00">2019-07-28</time>
               
             
           </span>
@@ -1377,6 +1580,12 @@
 </blockquote>
 <h2 id="杀进程"><a href="#杀进程" class="headerlink" title="杀进程"></a>杀进程</h2><p>杀进程,下面这个<a href="https://www.jianshu.com/p/3d9edcd023d7" target="_blank" rel="noopener">参考</a></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">##一、查看指定端口的进程</span><br><span class="line">sudo lsof -i :27017</span><br><span class="line"></span><br><span class="line">COMMAND   PID    USER        FD      TYPE             DEVICE             SIZE/OFF      NODE       NAME</span><br><span class="line">[mongod]  859   zhangsan    313u      IPv6            0x1111111111111     0t0         TCP        *:cslistener (LISTEN)</span><br><span class="line"></span><br><span class="line">## 二、根据进程名称</span><br><span class="line">ps -ef | grep nginx</span><br><span class="line"></span><br><span class="line">  501 17780     1   0  8:36下午 ??         0:00.00 nginx: master process nginx</span><br><span class="line">  501 17781 17780   0  8:36下午 ??         0:00.00 nginx: worker process</span><br><span class="line">  501 17790 14611   0  8:39下午 ttys004    0:00.00 grep nginx</span><br><span class="line"></span><br><span class="line">然后根据PID杀进程：</span><br><span class="line">sudo kill -9 859</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>nslookup </p>
+</blockquote>
+<h2 id="查域名的信息"><a href="#查域名的信息" class="headerlink" title="查域名的信息"></a>查域名的信息</h2><p>这是查询域名先关的命令,可以查看比较全面的信息, “ - 8.8.8.8” 可以指定查询的DNS服务器</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">bogon:linux steve$ nslookup - 8.8.8.8</span><br><span class="line">&gt; set type=ANY</span><br><span class="line">&gt; baidu.com</span><br><span class="line">Server:		8.8.8.8</span><br><span class="line">Address:	8.8.8.8#53</span><br><span class="line"></span><br><span class="line">Non-authoritative answer:</span><br><span class="line">baidu.com	mail exchanger = 20 mx50.baidu.com.</span><br><span class="line">baidu.com	mail exchanger = 10 mx.maillb.baidu.com.</span><br><span class="line">baidu.com	mail exchanger = 20 jpmx.baidu.com.</span><br><span class="line">baidu.com	mail exchanger = 20 mx1.baidu.com.</span><br><span class="line">baidu.com	mail exchanger = 15 mx.n.shifen.com.</span><br><span class="line">Name:	baidu.com</span><br><span class="line">Address: 220.181.38.148</span><br><span class="line">Name:	baidu.com</span><br><span class="line">Address: 123.125.114.144</span><br><span class="line">baidu.com	nameserver = ns7.baidu.com.</span><br><span class="line">baidu.com	nameserver = ns2.baidu.com.</span><br><span class="line">baidu.com	nameserver = dns.baidu.com.</span><br><span class="line">baidu.com	nameserver = ns4.baidu.com.</span><br><span class="line">baidu.com	nameserver = ns3.baidu.com.</span><br></pre></td></tr></table></figure>
           
         
       
@@ -1793,7 +2002,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-count">8</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
