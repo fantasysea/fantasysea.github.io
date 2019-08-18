@@ -290,6 +290,206 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/18/新手如何用node进行socket服务端开发/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Steve">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Steve's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/18/新手如何用node进行socket服务端开发/" class="post-title-link" itemprop="url">新手如何用node进行socket服务端开发</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-18 09:22:23 / 修改时间：09:36:53" itemprop="dateCreated datePublished" datetime="2019-08-18T09:22:23+08:00">2019-08-18</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="项目说明"><a href="#项目说明" class="headerlink" title="项目说明"></a>项目说明</h1><p>由于最近要做socket通讯,客户端是android实现的,node服务端是现学现卖,之前没进行过这方面的学习和开发,所以语法和结构都存在比较大的问题,大家做个参考即可.实际上,做这个粘包处理,参考了这个项目<a href="https://github.com/lvgithub/stick" target="_blank" rel="noopener">stick</a>,但是我这个处理的方案和stick项目的不太一样,stick项目自己维护了一个缓存,会动态增加,自己维护2个下标进行数据的维护.这样内存会有存在一直增大的可能,可能需要再次处理过大的缓存.我的方法是每次的缓存都是按照实际大小重新创建的,但这样需要消耗cpu资源进行复制.</p>
+<h1 id="包体结构"><a href="#包体结构" class="headerlink" title="包体结构"></a>包体结构</h1><p>整体包结构如下图，请求头包含event，content-length，seq-number，content。由于我们要进行心跳，所以为了减少数据 ，ping，pong仅仅需要event部分即可。处理头的时候需要针对ping和pong基础特殊处理.</p>
+<h2 id="总体结构"><a href="#总体结构" class="headerlink" title="总体结构"></a>总体结构</h2><table>
+<thead>
+<tr>
+<th align="center">event</th>
+<th align="center">content-length($CL)</th>
+<th align="center">seq-number</th>
+<th align="center">content</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><num>(2)</num></td>
+<td align="center"><num>(2)</num></td>
+<td align="center"><num>(3)</num></td>
+<td align="center"><buffer>($CL)</buffer></td>
+</tr>
+</tbody></table>
+<h3 id="特殊包（ping，pong）"><a href="#特殊包（ping，pong）" class="headerlink" title="特殊包（ping，pong）"></a>特殊包（ping，pong）</h3><table>
+<thead>
+<tr>
+<th align="center">event</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><num>(2)</num></td>
+</tr>
+</tbody></table>
+<p>seq-number是一个0-0xffffff循环的数字,实际上使用的时候,我用event来做业务类型的区分,seq-number是每次请求的唯一id,做对应关系.content可以是string,json等,但是都转换成buffer来传输.</p>
+<h2 id="粘包处理"><a href="#粘包处理" class="headerlink" title="粘包处理"></a>粘包处理</h2><p>粘包是2个包连在一起回来的情况,例如:ping的内容是0000,如果2个ping一起来,就会出现00000000这样的数据,那么我们就需要按照规则来分离出2个ping包.为什么会产生粘包,甚至半包呢,很多原因,我自己遇到的最简单的原因就是网络不好,导致客户端缓存了部分包,这样网络恢复的时候就会把之前的包一起发送给服务端.半包我在客户端开发现在还没遇到,但是在做串口通讯的时候经常会遇到这样的情况.连续的包,可能分多次接收才能接收完毕.</p>
+<h2 id="大小端"><a href="#大小端" class="headerlink" title="大小端"></a>大小端</h2><p>项目默认使用大端处理数据,目前我的android客户端我也是大端处理.我发现buffer.toString(‘hex’)的时候好像也是大端,打印出来的时候和预期一样.如果有错误请大家指出.</p>
+<h1 id="使用说明"><a href="#使用说明" class="headerlink" title="使用说明"></a>使用说明</h1><h2 id="启动服务器"><a href="#启动服务器" class="headerlink" title="启动服务器"></a>启动服务器</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install</span><br><span class="line">node socket_server.js</span><br></pre></td></tr></table></figure>
+
+<h2 id="模拟客户端"><a href="#模拟客户端" class="headerlink" title="模拟客户端"></a>模拟客户端</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">node socket_clent.js</span><br></pre></td></tr></table></figure>
+
+<h1 id="todo"><a href="#todo" class="headerlink" title="todo"></a>todo</h1><ul>
+<li>[] connection的管理</li>
+<li>[] 内存管理,例如:多个connection有一些可以共同管理</li>
+<li>[] 每个请求存到队列中,pop出来处理或者进行多线程处理</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/29/Android如何对libusb进行编译和使用/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -538,12 +738,24 @@
                 
               
 
-              <time title="创建时间：2019-07-20 18:17:29 / 修改时间：21:20:26" itemprop="dateCreated datePublished" datetime="2019-07-20T18:17:29+08:00">2019-07-20</time>
+              <time title="创建时间：2019-07-20 18:17:29" itemprop="dateCreated datePublished" datetime="2019-07-20T18:17:29+08:00">2019-07-20</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-17 02:12:44" itemprop="dateModified" datetime="2019-08-17T02:12:44+08:00">2019-08-17</time>
               
             
           </span>
@@ -2002,7 +2214,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-count">9</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -2044,7 +2256,11 @@
                     
                       
                     
-                    <span class="site-state-item-count">6</span>
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
                     <span class="site-state-item-name">标签</span>
                   
                 </div>
